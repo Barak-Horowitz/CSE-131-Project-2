@@ -11,8 +11,8 @@ public class FlowWalk {
     private Set<IRVariableOperand> criticalVars;
     public final BlockContext ctx;
 
-    public FlowWalk(FunctionContext ctx) {
-        this(ctx.blocks.getLast(), null);
+    public FlowWalk(BlockContext ctx) {
+        this(ctx, null);
     }
 
     private FlowWalk(BlockContext ctx, FlowWalk prev) {

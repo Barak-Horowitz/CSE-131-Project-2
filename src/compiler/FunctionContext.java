@@ -100,12 +100,13 @@ public class FunctionContext {
         if(blocks.isEmpty()) return;
 
         Map<BlockContext, Set<IRInstruction>> criticals = new HashMap<>();
+        Queue<FlowWalk> paths = new LinkedList<>();
         for(BlockContext ctx : blocks) {
             criticals.put(ctx, new HashSet<>());
-        }
 
-        Queue<FlowWalk> paths = new LinkedList<>();
-        paths.add(new FlowWalk(this));
+            if(ctx.branches.isEmpty())
+                paths.add(new FlowWalk(ctx));
+        }
 
         while(!paths.isEmpty()) {
             FlowWalk walk = paths.remove();
