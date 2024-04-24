@@ -1,6 +1,7 @@
 package ir;
 
 import ir.operand.IROperand;
+import java.lang.StringBuilder;
 
 public class IRInstruction {
 
@@ -32,6 +33,43 @@ public class IRInstruction {
         this.opCode = opCode;
         this.operands = operands;
         this.irLineNumber = irLineNumber;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(opCode.toString());
+        for(IROperand o : operands) {
+            builder.append(", ");
+            builder.append(o.toString());
+        }
+        return builder.toString();
+    }
+
+    public boolean isLogicalJump() {
+        switch(opCode) {
+            case GOTO:
+            case RETURN:
+            case BREQ:
+            case BRNEQ:
+            case BRLT:
+            case BRGT:
+            case BRLEQ:
+            case BRGEQ: return true;
+        }
+        return false;
+    }
+
+    public boolean isBranch() {
+        switch(opCode) {
+            case BREQ:
+            case BRNEQ:
+            case BRLT:
+            case BRGT:
+            case BRLEQ:
+            case BRGEQ: return true;
+        }
+        return false;
     }
 
 }
