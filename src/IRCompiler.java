@@ -24,11 +24,11 @@ public class IRCompiler {
             }
             System.out.println();
 
-//             for(BlockContext blk : ctx.blocks) {
-//                 System.out.println(blk.predecessors + " " + blk.branches);
-//             }
-//
-//             System.out.println();
+            // for(BlockContext blk : ctx.blocks) {
+            //     System.out.println(blk.predecessors + " " + blk.branches);
+            // }
+            //
+            // System.out.println();
         }
     }
 }

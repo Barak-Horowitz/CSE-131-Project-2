@@ -22,4 +22,9 @@ public abstract class IROperand {
         return value;
     }
 
+    @Override
+    public int hashCode() {
+        return value.hashCode();
+    }
+
 }

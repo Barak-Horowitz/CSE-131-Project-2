@@ -1,6 +1,6 @@
 package ir;
 
-import ir.operand.IROperand;
+import ir.operand.*;
 import java.lang.StringBuilder;
 
 public class IRInstruction {
@@ -68,6 +68,10 @@ public class IRInstruction {
         return false;
     }
 
+    public boolean isJump() {
+        return isInternalJump() || isFunctionJump();
+    }
+
     public boolean isBranch() {
         switch(opCode) {
             case BREQ:
@@ -80,4 +84,42 @@ public class IRInstruction {
         return false;
     }
 
+    public boolean isArithmetic() {
+        switch(opCode) {
+            case ASSIGN:
+            case ADD:
+            case SUB:
+            case MULT:
+            case DIV:
+            case AND:
+            case OR:
+            case CALLR:
+            case RETURN:
+            case ARRAY_STORE:
+            case ARRAY_LOAD: return true;
+        }
+        return false;
+    }
+
+    public boolean isWriteToVar() {
+        switch(opCode) {
+            case ASSIGN:
+            case ADD:
+            case SUB:
+            case MULT:
+            case DIV:
+            case AND:
+            case OR:
+            case CALLR:
+            case ARRAY_LOAD: return true;
+        }
+        return false;
+    }
+
+    public boolean isWriteToArray() {
+        switch(opCode) {
+            case ARRAY_STORE: return true;
+        }
+        return false;
+    }
 }

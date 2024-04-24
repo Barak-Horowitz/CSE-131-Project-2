@@ -6,7 +6,7 @@ import ir.IRInstruction.OpCode;
 import java.util.*;
 
 public class FunctionContext {
-    public List<BlockContext> blocks;
+    public LinkedList<BlockContext> blocks;
     public List<IRInstruction> allInstructions;
     public Map<String, BlockContext> labelLinks;
 
@@ -17,10 +17,12 @@ public class FunctionContext {
 
         interpretBlocks();
         linkBlocks();
+
+        optimize();
     }
 
-    private void interpretBlocks() {
-        blocks = new java.util.ArrayList<>();
+    private void interpretBlocks() throws IRException {
+        blocks = new LinkedList<>();
 
         List<IRInstruction> instructions = new java.util.ArrayList<>();
         Collection<String> labels = new java.util.ArrayList<>();
@@ -49,7 +51,7 @@ public class FunctionContext {
             blocks.add(new BlockContext(labels, instructions));
     }
 
-    public void linkBlocks() throws IRException {
+    private void linkBlocks() throws IRException {
         labelLinks = new java.util.HashMap<>();
         for(BlockContext ctx : blocks) {
             for(String str : ctx.labels) {
@@ -90,6 +92,29 @@ public class FunctionContext {
             for(BlockContext branch : ctx.branches) {
                 branch.predecessors.add(ctx);
             }
+        }
+    }
+
+    private void optimize() {
+        if(blocks.isEmpty()) return;
+
+        Map<BlockContext, Set<IRInstruction>> criticals = new HashMap<>();
+        for(BlockContext ctx : blocks) {
+            criticals.put(ctx, new HashSet<>());
+        }
+
+        Queue<FlowWalk> paths = new LinkedList<>();
+        paths.add(new FlowWalk(this));
+
+        while(!paths.isEmpty()) {
+            FlowWalk walk = paths.remove();
+            // System.out.println(walk);
+            criticals.get(walk.ctx).addAll(walk.walk());
+            paths.addAll(walk.predecessors());
+        }
+
+        for(BlockContext ctx : blocks) {
+            ctx.instructions.retainAll(criticals.get(ctx));
         }
     }
 }

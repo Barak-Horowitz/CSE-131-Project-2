@@ -18,7 +18,7 @@ public class IRVariableOperand extends IROperand {
 
     @Override
     public boolean equals(Object o) {
-        if(o instanceof IRVariableOperand) return false;
+        if(!(o instanceof IRVariableOperand)) return false;
         return ((IRVariableOperand) o).getName().equals(getName());
     }
 }
