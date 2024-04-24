@@ -46,16 +46,24 @@ public class IRInstruction {
         return builder.toString();
     }
 
-    public boolean isLogicalJump() {
+    public boolean isInternalJump() {
         switch(opCode) {
             case GOTO:
-            case RETURN:
             case BREQ:
             case BRNEQ:
             case BRLT:
             case BRGT:
             case BRLEQ:
             case BRGEQ: return true;
+        }
+        return false;
+    }
+
+    public boolean isFunctionJump() {
+        switch(opCode) {
+            case CALL:
+            case CALLR:
+            case RETURN: return true;
         }
         return false;
     }
