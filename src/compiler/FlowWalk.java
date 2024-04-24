@@ -27,6 +27,8 @@ public class FlowWalk {
     }
 
     public Set<IRInstruction> walk() {
+        if(criticalInstructions != null) throw new IllegalStateException("Already walked");
+
         criticalInstructions = new HashSet<>();
         for(Iterator<IRInstruction> iter = ctx.instructions.descendingIterator(); iter.hasNext();) {
             IRInstruction inst = iter.next();
