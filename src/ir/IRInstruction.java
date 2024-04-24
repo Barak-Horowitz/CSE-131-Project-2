@@ -122,4 +122,12 @@ public class IRInstruction {
         }
         return false;
     }
+
+    public boolean isArrayOp() {
+        switch(opCode) {
+            case ARRAY_LOAD:
+            case ARRAY_STORE: return true;
+        }
+        return false;
+    }
 }

@@ -33,16 +33,20 @@ public class FlowWalk {
         for(Iterator<IRInstruction> iter = ctx.instructions.descendingIterator(); iter.hasNext();) {
             IRInstruction inst = iter.next();
 
-            boolean critical = inst.isJump();
+            boolean critical = inst.isJump() || inst.isArrayOp();
+
+            if(inst.isWriteToVar()) {
+                critical = critical || criticalVars.remove((IRVariableOperand) inst.operands[0]);
+            } else if(inst.isWriteToArray()) {
+                critical = critical || criticalVars.remove((IRVariableOperand) inst.operands[1]);
+            }
+
             for(int i = 0; i < inst.operands.length; i++) {
 
                 if(inst.operands[i] instanceof IRVariableOperand) {
                     IRVariableOperand var = (IRVariableOperand) inst.operands[i];
 
-                    if((i == 0 && inst.isWriteToVar()) || (i == 1 && inst.isWriteToArray())) {
-                        critical = critical || criticalVars.remove(var);
-                        // System.out.println("WRITE "+critical+" "+inst);
-                    } else {
+                    if(!((i == 0 && inst.isWriteToVar()) || (i == 1 && inst.isWriteToArray()))) {
                         if(critical) criticalVars.add(var);
                     }
                 }

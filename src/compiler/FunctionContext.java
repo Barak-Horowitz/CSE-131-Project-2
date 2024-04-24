@@ -1,5 +1,6 @@
 package compiler;
 
+import java.io.PrintStream;
 import ir.*;
 import ir.operand.*;
 import ir.IRInstruction.OpCode;
@@ -116,5 +117,19 @@ public class FunctionContext {
         for(BlockContext ctx : blocks) {
             ctx.instructions.retainAll(criticals.get(ctx));
         }
+    }
+
+    public IRFunction getOptimizedFunction() {
+        LinkedList<IRInstruction> ninstr = new LinkedList<>();
+        IRFunction nfnc = new IRFunction(function.name, function.returnType, function.parameters, function.variables, ninstr);
+
+        for(BlockContext ctx : blocks) {
+            for(String label : ctx.labels) {
+                ninstr.add(new IRInstruction(OpCode.LABEL, new IROperand[] { new IRLabelOperand(label, null) }, -1));
+            }
+            ninstr.addAll(ctx.instructions);
+        }
+
+        return nfnc;
     }
 }
