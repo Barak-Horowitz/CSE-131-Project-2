@@ -389,6 +389,7 @@ public class IRInterpreter {
                 varMap.put(variable.getName(), arr);
                 if (arrayType.getElementType() == IRIntType.get())
                     for (int i = 0; i < arr.length; i++)
+<<<<<<< HEAD
                         arr[i] = Integer.valueOf(0);
                 else
                     for (int i = 0; i < arr.length; i++)
@@ -398,6 +399,17 @@ public class IRInterpreter {
                     varMap.put(variable.getName(), Integer.valueOf(0));
                 else
                     varMap.put(variable.getName(), Float.valueOf(0));
+=======
+                        arr[i] = new Integer(0);
+                else
+                    for (int i = 0; i < arr.length; i++)
+                        arr[i] = new Float(0);
+            } else {
+                if (variable.type == IRIntType.get())
+                    varMap.put(variable.getName(), new Integer(0));
+                else
+                    varMap.put(variable.getName(), new Float(0));
+>>>>>>> 0502606 (first commit)
             }
         }
 
