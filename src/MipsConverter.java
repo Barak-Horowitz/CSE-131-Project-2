@@ -30,7 +30,7 @@ public class MipsConverter {
         for(IRFunction function : irProgram.functions) {
             for(IRInstruction instruction : function.instructions) {
                 // convert current ir instruction to a set of MIPS instructions
-                List<MIPSInstruction> mipsInstructions = irToMips(instruction)
+                List<MIPSInstruction> mipsInstructions = convertInstruction(instruction)
                 // add all created mips instructions to MIPS instruction set
                 for (MIPSInstruction mipsInstruction : mipsInstructions) {
                     mipsInstructionSet.add(curr_index, mipsInstruction)
@@ -38,6 +38,61 @@ public class MipsConverter {
                 }
             }
         }
+    }
+
+    private List<MIPSInstruction> convertInstruction(IRInstruction instruction) {
+        switch(instruction.opCode) {
+            case(ASSIGN):
+            case(ADD):
+            case(SUB):
+            case(MULT):
+            case(DIV):
+            case(AND):
+            case(OR):
+                return convertAlgebraicOperation(instruction);
+            case(GOTO):
+            case(BREQ):
+            case(BRNEQ):
+            case(BRLT):
+            case(BRGT):
+            case(BRLEQ):
+            case(BRGEQ):
+            case(RETURN):
+            case(CALL):
+            case(CALLR):
+                return convertJumpOperation(instruction);
+            default:
+                return convertDataOperation(instruction);
+        }
+    }
+
+    private List<MIPSInstruction> convertAlgebraicOperation(IRInstruction instruction) {
+        if(iType(instruction)) {
+
+        }
+        else {
+
+        }
+
+    }
+
+    private List<MIPSInstruction> convertJumpOperation(IRInstruction instruction) {
+
+
+    }
+
+    private List<MIPSInstruction> convertDataOperation(IRInstruction instruction) {
+        if(iType(instruction)) {
+
+        }
+        else {
+
+        }
+
+    }
+
+    private boolean iType (IRInstruction instruction) {
+
     }
 
 }
