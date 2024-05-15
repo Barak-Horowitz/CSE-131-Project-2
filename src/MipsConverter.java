@@ -147,11 +147,17 @@ public class MipsConverter {
         List<MIPSInstruction> returnList = new LinkedList<>();
 
         switch(instruction.opCode) {
-            case GOTO: 
-                String labelName = instruction.operands[0].getValue();
-                Addr label_address = new Addr(label);
-                MIPSInstruction jump = new MIPSInstruction(MipsOp.j, "", label_address);
 
+            // goto instruction in tigerIR corresponds directly to a jump instruction in MIPS
+            case GOTO: 
+                String label = instruction.operands[0].getValue();
+                Addr labelAddress = new Addr(label);
+                MIPSInstruction jump = new MIPSInstruction(MipsOp.j, "", labelAddress);
+                break;
+
+            // call instruction in tigerIR corresponds to 2 steps in MIPS
+            // 1) loading all arguments onto stack/arguments registers
+            // 2) calling the function
             case CALL: // jal instruction
                 for(int i = 1; i < instruction.operands.size; i++) {
                     // add first four arguments into a0-a4
@@ -162,23 +168,29 @@ public class MipsConverter {
                 }
                 // add jal instruction after placing all arguments 
                 returnList.add(createJumpAndLink(instruction), 0);
-                return returnList;
-
-                
+                break;
+            
+            // callr instruction in tigerIR corresponds to three steps in MIPS
+            // 1) loading all arguments onto stack/arguments registers
+            // 2) calling the function
+            // 3) grabbing the value returned by the function and placing it in specified variable/register
             case CALLR: // jal instruction grab return value from link register
                 for(int i = 2; i < instructions.operands.size; i++) {
                     // add first four arguments into a0-a4
                     if((i - 2) < 4) {
                         returnList.add(createMove(regmap.get(instruction.operands[i]), i-2 + 4));
                     }
+                    // TODO: HANDLE CASE WHERE WE HAVE MORE THEN 4 ARGUMENTS!
+
                     // add jal instruction after placing arguments 
                     returnList.add(createJumpAndLink(instruction), 1);
                     // move value returned into requested register
                     returnList.add(createMove(2, regmap.get(instruction.operands[0])));
+                    break;
 
                 }
 
-
+            // there is no label instruction in MIPS we spoof it by creating a no-op and assigning it a label 
             case LABEL: 
                 // grab the name of the label
                 String labelName = instruction.operands[0].getValue()
@@ -188,11 +200,85 @@ public class MipsConverter {
                 MIPSInstruction label = new MIPSInstruction(MipsOp.ADDI, labelName, noOp, noOp, zero);
                 returnList.add(label)
                 break;
+            
+            // there exists a brneq instruction in mips, we translate it directly
+            case BRNEQ:
+                String label = instruction.operands[0].getValue();
+                Addr labelAddress = new Addr(label);
+                Register sourceRegOne = new Register(regmap.get(instructions.operands[1]));
+                Register sourceRegTwo = new Register(regmap.get(instructions.operands[2]));
+                MIPSInstruction brneq = new MIPSInstruction(MipsOP.BNE, "", sourceRegOne, sourceRegTwo);
+                returnList.add(brneq);
+                break;
+            
+            // there exists a breq instruction in mips, we translate it directly
+            case BREQ:
+                String label = instruction.operands[0].getValue();
+                Addr labelAddress = new Addr(label);
+                Register sourceRegOne = new Register(regmap.get(instructions.operands[1]));
+                Register sourceRegTwo = new Register(regmap.get(instructions.operands[2]));
+                MIPSInstruction breq = new MIPSInstruction(MipsOP.BEQ, "", sourceRegOne, sourceRegTwo, labelAddress);
+                returnList.add(breq);
+                break;
+            
+            // there does not exist a brlt instruction in mips, we must translate this to a brltz
+            // by subtracting the second source operand from the first
+            case BRLT:
+                String label = instruction.operands[0].getValue();
+                Addr labelAddress = new Addr(label);
+                returnList.add(createSubtract(1, regmap.get(instruction.operands[1]), instruction.operands[2]));
+                Register temp = new Register(1);
+                MIPSInstruction brltz = new MIPSInstruction(MIPSOP.brltz. "", temp, labelAddress);
+                returnList.add(brltz);
+                break;
+            
+            // there does not exist a brlt instruction in mips we must translate this to a bgtz
+            // by subtracting second source operand from the first
+            case BRGT:
+                String label = instruction.operands[0].getValue();
+                Addr labelAddress = new Addr(label);
+                returnList.add(createSubtract(1, regmap.get(instruction.operands[1]), instruction.operands[2]));
+                Register temp = new Register(1);
+                MIPSInstruction bgtz = new MIPSInstruction(MIPSOP.bgtz. "", temp, labelAddress);
+                returnList.add(bgtz);
+                break;
+            
+            // there does not exist a brgeq instruction in mips we must translate this to a bgez
+            // by subtracting second source operand from first
+            case BRGEQ:
+                String label = instruction.operands[0].getValue();
+                Addr labelAddress = new Addr(label);
+                returnList.add(createSubtract(1, regmap.get(instruction.operands[1]), instruction.operands[2]));
+                Register temp = new Register(1);
+                MIPSInstruction bgez = new MIPSInstruction(MIPSOP.bgez. "", temp, labelAddress);
+                returnList.add(bgez);
+                break;
+            
+            case BRLEQ:
+                String label = instruction.operands[0].getValue();
+                Addr labelAddress = new Addr(label);
+                returnList.add(createSubtract(1, regmap.get(instruction.operands[1]), instruction.operands[2]));
+                Register temp = new Register(1);
+                MIPSInstruction blez = new MIPSInstruction(MIPSOP.blez. "", temp, labelAddress);
+                returnList.add(btez);
+                break;
 
+            
 
+            // return in tiger IR translates to moving specified variable to return register and calling JR
+            CASE RETURN: 
+                // move return value into return register
+                returnList.add(createMove(regmap.get(instructions.operands[0]), 2));
+                // return to PC stored in link register
+                MIPSInstruction return = new MIPSInstruction(MIPSOp.JR, "");
+                returnList.add(return);
+                break;
 
-            CASE RETURN: // jr instruction     
+            
+
+                
         }
+        return returnList;
 
 
     }
@@ -203,6 +289,15 @@ public class MipsConverter {
         Register destReg = new Register(dest);
         MIPSInstruction move = new MIPSInstruction(MIPSOp.MOVE,"", destReg, sourceReg);
         return move;
+    }
+
+    // given two source registers and a destination register constructs a subtraction instruction
+    private MIPSInstruction createSubtract(int dest, int sourceOne, int sourceTwo) {
+        Register sourceRegOne = new Register(sourceOne);
+        Register sourceRegTwo = new Register(sourceRegTwo);
+        Register destReg = new Register(dest);
+        MIPSInstruction subtract = new mipsInstruction(MipsOp.sub, "", destReg, sourceRegOne, sourceRegTwo);
+        return subtract;
     }
     
     // given an operand index where a label is stored and its instruction constructs a jump and link to the label
