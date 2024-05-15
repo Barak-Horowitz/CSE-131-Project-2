@@ -19,7 +19,7 @@ public class MipsConverter {
     public static void main(String[] args) throws Exception {
 
         regMap = new HashMap<>();
-        firstFreeReg = 0;
+        firstFreeReg = 32;
         // file reader reads a text file containing text code and generates datastructure for the program
         IRReader file_reader = new IRReader();
         IRProgram program = file_reader.parseIRFile(args[0]);
@@ -107,21 +107,27 @@ public class MipsConverter {
             case ADD:
                 MIPSInstruction convertedInstruction = new MIPSInstruction(MipsOp.ADD, "", opZero, opOne, opTwo);
                 returnList.add(convertedInstruction)
+                break;
             case SUB:
                 MIPSInstruction convertedInstruction = new MIPSInstruction(MipsOp.SUB, "", opZero, opOne, opTwo);
                 returnList.add(convertedInstruction)
+                break;
             case MULT:
                 MIPSInstruction convertedInstruction = new MIPSInstruction(MipsOp.MUL, "", opZero, opOne, opTwo);
                 returnList.add(convertedInstruction)
+                 break;
             case DIV:
                 MIPSInstruction convertedInstruction = new MIPSInstruction(MipsOp.DIV, "", opZero, opOne, opTwo);
                 returnList.add(convertedInstruction)
+                break;
             case AND:
                 MIPSInstruction convertedInstruction = new MIPSInstruction(MipsOp.AND, "", opZero, opOne, opTwo);
                 returnList.add(convertedInstruction)
+                break;
             case OR:
                 MIPSInstruction convertedInstruction = new MIPSInstruction(MipsOp.OR, "", opZero, opOne, opTwo);
                 returnList.add(convertedInstruction)
+                break;
         }
         return returnList;
 
@@ -138,9 +144,74 @@ public class MipsConverter {
 
     // given a branch instruction converts it to the appropriate R type MIPS instruction
     private List<MIPSInstruction> convertJType(IRInstruction instruction) {
-        return null;
+        List<MIPSInstruction> returnList = new LinkedList<>();
+
+        switch(instruction.opCode) {
+            case GOTO: 
+                String labelName = instruction.operands[0].getValue();
+                Addr label_address = new Addr(label);
+                MIPSInstruction jump = new MIPSInstruction(MipsOp.j, "", label_address);
+
+            case CALL: // jal instruction
+                for(int i = 1; i < instruction.operands.size; i++) {
+                    // add first four arguments into a0-a4
+                    if((i - 1) < 4) {
+                        returnList.add(createMove(regmap.get(instruction.operands[i]), i-1 + 4));
+                    }
+                    // TODO: HANDLE CASE WHERE WE HAVE MORE THEN 4 ARGUMENTS!
+                }
+                // add jal instruction after placing all arguments 
+                returnList.add(createJumpAndLink(instruction), 0);
+                return returnList;
+
+                
+            case CALLR: // jal instruction grab return value from link register
+                for(int i = 2; i < instructions.operands.size; i++) {
+                    // add first four arguments into a0-a4
+                    if((i - 2) < 4) {
+                        returnList.add(createMove(regmap.get(instruction.operands[i]), i-2 + 4));
+                    }
+                    // add jal instruction after placing arguments 
+                    returnList.add(createJumpAndLink(instruction), 1);
+                    // move value returned into requested register
+                    returnList.add(createMove(2, regmap.get(instruction.operands[0])));
+
+                }
+
+
+            case LABEL: 
+                // grab the name of the label
+                String labelName = instruction.operands[0].getValue()
+                // construct a fake no-op with a label name to allow for jumps to this location
+                Register noOp = new Register(0);
+                Imm zero = New Imm("0", "DEC");
+                MIPSInstruction label = new MIPSInstruction(MipsOp.ADDI, labelName, noOp, noOp, zero);
+                returnList.add(label)
+                break;
+
+
+
+            CASE RETURN: // jr instruction     
+        }
+
 
     }
+
+    // given a source and a destination register constructs a move instruction between the two
+    private MIPSInstruction createMove(int source, int dest) {
+        Register sourceReg = new Register(source);
+        Register destReg = new Register(dest);
+        MIPSInstruction move = new MIPSInstruction(MIPSOp.MOVE,"", destReg, sourceReg);
+        return move;
+    }
+    
+    // given an operand index where a label is stored and its instruction constructs a jump and link to the label
+    private mipsInstruction createJumpAndLink(int labelIndex, IRInstruction instruction) {
+        String labelName = instruction.operands[labelIndex].getValue();
+        Addr labelAddress = new Addr(label);
+        MIPSInstruction call = new MIPSInstruction(MipsOp.jal, "", labelAddress);
+    }
+
 
     // if instruction has any numbers in its operands instead of variables it is an i-type instruction
     private boolean iType (IRInstruction instruction) {
