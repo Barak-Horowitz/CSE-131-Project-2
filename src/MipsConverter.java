@@ -80,6 +80,10 @@ public class MipsConverter {
     // given an instruction operating on only variables converts it to the appropriate R type MIPS instructions
     // garunteed to take in an instruction with 3 operands, at least 2 of which correspond to previously assigned variables
     private List<MIPSInstruction> convertRType(IRInstruction instruction) {
+        // EDGE CASE - ASSIGN ONLY HAS TWO OPERANDS 
+        if(instruction.opCode == IRInstruction.opCode.ASSIGN) {
+            // TODO: ADD ASSIGN
+        }
 
         List<MIPSInstruction> returnList = new LinkedList<>();
         Integer sourceRegOne = regMap.get(instruction.operands[1]);
@@ -128,6 +132,7 @@ public class MipsConverter {
                 MIPSInstruction convertedInstruction = new MIPSInstruction(MipsOp.OR, "", opZero, opOne, opTwo);
                 returnList.add(convertedInstruction)
                 break;
+            
         }
         return returnList;
 
@@ -138,6 +143,133 @@ public class MipsConverter {
 
     // given an instruction operating on variables and immediates, converts it to the appropriate I type MIPS instructions
     private List<MIPSInstruction> convertIType(IRInstruction instruction) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        // instruction is garunteed to be an arithmetic instruction (data and jump checked first)
+        // TODO: figure out what to do if immediate value is larger then 16 bits!
+        Register destReg = new Register(regmap.get(instruction.operands[0]));
+        Register zeroReg = new Register(0);
+        Integer sourceOne = regmap.get(instruction.operands[1]);
+        Integer sourceTwo = regmap.get(instruction.operands[2]);
+        switch(instruction.opCode) {
+            case ADD:
+            // EDGE CASE - if both variables are immediates, two additions are necessary 
+                if(sourceOne == null && sourceTwo == null) {
+                Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
+                imm valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()));
+                MIPSInstruction addFirst = new MIPSInstruction(MipsOp.ADDI, "", destReg, zeroReg, valOne);
+                MIPSInstruction addSecond = new MIPSInstruction(mipsOp.ADDI, "", destReg, destReg, valTwo);
+                returnList.add(addFirst);
+                returnList.add(addSecond);
+                // check if immediate is first value or second
+                } else if(sourceOne == null) {
+                    Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
+                    MIPSInstruction add = new MIPSInstruction(mipsOp.ADDI, "", destReg, valOne, sourceTwo);
+                    returnList.add(add);
+                else {
+                    immValTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()));
+                    MIPSInstruction add = new MIPSInstruction(mopsOp.ADDI, "", destReg, sourceOne, valTwo);
+                    retunList.add(add);
+                }
+                break;
+                
+            case SUB:
+            // EDGE CASE - if both variables are immediates two subtractions are necessary
+                if(sourceOne == null && sourceTwo == null) {
+                    Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
+                    Imm valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()) * - 1);
+                    MIPSInstruction addFirst = new MIPSInstruction(mipsOp.ADDI, destReg, zeroReg, valOne);
+                    MIPSInstruction subSecond = new MIPSInstruction(mipsOP.ADDI, destReg, destReg, valTwo);
+                }
+                // check if immediate is first value or second
+                else if(sourceOne == null) { // if immediate is first value must store it in a register!
+                    Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
+                    Register sourceTwoReg = new Register(sourceTwo);
+                    regVal = getFreeReg();
+                    Register sourceOneReg = new Register(regVal());
+                    MIPSInstruction addFirst = new MIPSInstruction(mipsOP.ADDI, destReg, zeroReg, valOne);
+                    MIPSInstruction subSecond = new MIPSInstruction(mipsOP.sub, destReg, destReg, sourceTwoReg);
+                    returnList.add(addFirst);
+                    returnList.add(subSecond);
+                } else { // if immediate is second value can keep as immediate
+                    Register sourceOneReg = new Register(sourceOne);
+                    Imm valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()) *  -1);
+                    MIPSInstruction subFirst = new MIPSInstruction(mipsOp.ADDI, destReg, sourceOneReg, valTwo);
+                    returnList.add(subFirst);
+                }
+                break;
+
+
+            // TODO: FIGURE OUT IF MULT OR DIVIDE CAN HAVE IMMEDIATES!
+
+            case MULT:
+
+            case DIV:
+            
+            case AND:
+            // EDGE CASE - if both variables are immediates, addition following AND is necessary
+                if(sourceOne == null && sourceTwo == null) {
+                    Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
+                    Imm valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()));
+                    MIPSInstruction addFirst = new MIPSInstruction(mipsOp.ADDI, destReg, zeroReg, valOne);
+                    MIPSInstruction andSecond = new MIPSInstruction(mipsOP.ANDI, destReg, destReg, valTwo);
+                    returnList.add(addFirst);
+                    returnList.add(andSecond);
+                } else if (sourceOne == null) {
+                    Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
+                    Register sourceTwoReg = new Register(sourceTwo);
+                    MIPSInstruction andFirst = new MIPSInstruction(mipsOp.ANDI, destReg, sourceTwoReg, valOne);
+                    returnList.add(andFirst);
+                } else {
+                    Register sourceOneReg = new Register(sourceOne);
+                    Imm valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()));
+                    MIPSInstruction andFirst = new MIPSInstruction(mipsOP.ANDI, destReg, sourceOneReg, valTwo);
+                    returnList.add(andFirst);
+                }
+                break;
+
+
+
+                }
+
+            case OR:
+            // EDGE CASE - if both variables are immediates, addition following OR is necessary 
+                if(sourceOne == null && sourceTwo == null) {
+                    Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
+                    Imm valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()));
+                    MIPSInstruction addFirst = new MIPSInstruction(mipsOp.ADDI, destReg, zeroReg, valOne);
+                    MIPSInstruction orSecond = new MIPSInstruction(mipsOP.ORI, destReg, destReg, valTwo);
+                    returnList.add(addFirst);
+                    returnList.add(orSecond);
+
+                } else if(sourceOne == null) {
+                    Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
+                    Register sourceTwoReg = new Register(sourceTwo);
+                    MIPSInstruction andFirst = new MIPSInstruction(mipsOp.ORI, destReg, sourceTwoReg, valOne);
+                    returnList.add(andFirst);
+
+                } else {
+                    Register sourceOneReg = new Register(sourceOne);
+                    Imm valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()));
+                    MIPSInstruction andFirst = new MIPSInstruction(mipsOP.ORI, destReg, sourceOneReg, valTwo);
+                    returnList.add(andFirst);
+                }
+
+                break;
+
+
+            case ASSIGN:
+                Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
+                MIPSInstruction assign = new MIPSInstruction(mipsOP.ADDI, destReg, zeroReg, valOne);
+                returnList.add(assign);
+                break;
+
+            }
+
+
+
+        }
+
+        // TODO: figure out what to do if both operands are immediates!
         return null;
 
     }
@@ -311,9 +443,11 @@ public class MipsConverter {
     // if instruction has any numbers in its operands instead of variables it is an i-type instruction
     private boolean iType (IRInstruction instruction) {
         for(int i = 0; i < instruction.operands.size; i++) {
-            if(instruction.operands[i] instanceof IRConstantOperand) {
+            if(instruction.operands[i] instanceof IRConstantOperand && instruction.operands[i].type instanceof IRIntType
+                && Integer.parseInt(instruction.operands[i].getValueString()) <= 0xFFFF) {
                 return true;
             }
+            // TODO: handle cases where immediate value is a float, or an array, or is larger then max immediate in mips
         }
         return false;
     }
