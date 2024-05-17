@@ -15,8 +15,6 @@ private int firstFreeReg;
 public class MipsCompiler {
     public static void main(String[] args) throws Exception {
 
-        regMap = new HashMap<>();
-        firstFreeReg = 32;
         // file reader reads a text file containing text code and generates datastructure for the program
         IRReader file_reader = new IRReader();
         IRProgram program = file_reader.parseIRFile(args[0]);
