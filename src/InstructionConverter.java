@@ -9,14 +9,23 @@ import mips.*;
 public class InstructionConverter {
     private InstructionCreator mipsCreator;
 
-    private final ARGSREG = 4;
-    private final RETURNREG = 2;
+    private final String ARGSREG = "4";
+    private final String RETURNREG = "2";
 
-    // TODO: ADD REGMAP DATA STRUCTURE TO MAP REGISTERS TO VARIABLES!
+    // stores which variables have been allocated inside of a program
+    private ArrayList<HashMap<String, Register>> regMap;
+
+    // stores which variables have already been allocated inside of a function
+    private HashMap<String, Register> funcMap;
+
+    private int largestRegVal;
     
 
     public InstructionConverter {
         mipsCreator = new InstructionCreator();
+        regMap = new ArrayList<>();
+        funcMap = new HashMap<>();
+        largestRegVal = 0;
     }
 
     public List<MIPSInstruction> convertInstruction(IRInstruction instruction) {  
@@ -55,7 +64,7 @@ public class InstructionConverter {
                 // load arguments into argument registers
                 for(int i = 1; i < instruction.operands.size; i++) {
                     // TODO: - ADD CHECK FOR IF ARGUMENT IS IMMEDIATE OR REGISTER!
-                    Register sourceReg = new Register(regmap.get(instruction.operands[i]));
+                    Register sourceReg = (funcMap.get(instruction.operands[i].toString()));
                     Register destReg = new Register(i - 1 + ARGSREG);
                     returnList.addAll(mipsCreator.createMove(destReg, sourceReg));
                 } // jump after loading arguments
@@ -68,15 +77,16 @@ public class InstructionConverter {
                 // load arguments into argument registers
                 for(int i = 2; i < instruction.operands.size; i++) {
                     // TODO: - ADD CHECK FOR IF ARGUMENT IS IMMEDIATE OR REGISTER!
-                    Register sourceReg = new Register(regmap.get(instruction.operands[i]));
+                    Register sourceReg = funcMap.get(instruction.operands[i].toString());
+                    // Argument registers do NOT need to be tracked - always assumed free!
                     Register destReg = new Register(i - 2 + ARGSREG);
                     returnList.addAll(mipsCreator.createMove(destReg, sourceReg));
                 } // jump after loading arguments
                 String label = instruction.operands[1].getValue();
                 Addr labelAddress = new Addr(label);
-                returnList.addAll(mipsCreator.createLinkedJump(labelAddress));
-                // move returned value into specified register
-                Register destReg = new Register(regMap.get(instruction.operands[0]));
+                returnList.addAll(mipsCreator.createLinkedJump(labelAddress)); 
+                Register destReg = variableToRegister(instruction.operands[0]);
+                // return registers do NOT need to be tracked  always assumed free!
                 register sourceReg = new Register(RETURNREG);
                 returnList.addAll(mipsCreator.createMove(destReg, sourceReg));
                 return returnList;
@@ -84,8 +94,10 @@ public class InstructionConverter {
             case LABEL:
                 String labelName = instruction.operands[0].getValue()
                 return mipsCreator.createLabel(labelName);
+
             case RETURN: 
-                Register sourceReg = regMap.get(instruction.operands[0]);
+                Register sourceReg = funcMap.get(instruction.operands[0].toString());
+                // return registers do NOT need to be tracked - always assumed to be free!
                 Register destReg = new Register(RETURNREG);
                 return mipsCreator.createReturn(destReg, sourceReg);
             
@@ -99,8 +111,8 @@ public class InstructionConverter {
     private List<MIPSInstruction> convertConditionalBranch(IRInstruction instruction) {
         String label = instruction.operands[0].getValue();
         Addr labelAddress = new Addr(label);
-        Register sourceRegOne = new Register(regmap.get(instructions.operands[1]));
-        Register sourceRegTwo = new Register(regmap.get(instructions.operands[2]));
+        Register sourceRegOne = funcMap.get(instructions.operands[1].toString());
+        Register sourceRegTwo = funcMap.get(instructions.operands[2].toString());
         
         switch(instruction.opCode) {
             case BRNEQ:
@@ -129,17 +141,14 @@ public class InstructionConverter {
             
             
     private List<MIPSInstruction> convertRType(IRInstruction instruction) {
-        List<MIPSInstruction> returnList = new LinkedList<>();
-        Integer destReg = regMap.get(instruction.operands[0]);
-        Integer sourceRegOne = regMap.get(instruction.operands[1]);
-        Integer sourceRegTwo = regMap.get(instruction.operands[2]);
-
+        Register destReg = variableToRegister(instruction.operands[0]);
+        Register sourceRegOne = funcMap.get(instruction.operands[1].toString());
+        Register sourceRegTwo = funcMap.get(instruction.operands[2].toString());
         // if only two operands exist instruction must be an assign 
         if(sourceRegTwo == null) { 
-            returnList.add(mipsCreator.createMove(destReg, sourceRegOne));
+            return mipsCreator.createMove(destReg, sourceRegOne);
 
         }
-
         switch(instruction.opCode) {
             
             case ADD:
@@ -163,43 +172,40 @@ public class InstructionConverter {
     }
 
     private List<MIPSInstruction convertIType(IRInstruction instruction) {
-        List<MIPSInstruction> returnList = new LinkedList<>();
-        Register destReg = new Register(regmap.get(instruction.operands[0]));
+        Imm valOne = null;
+        Imm valTwo = null;
+        Register destReg = variableToRegister(instruction.operands[0]);
         Register zeroReg = new Register(0);
-        Integer sourceOne = regmap.get(instruction.operands[1]);
-        Integer sourceTwo = regmap.get(instruction.operands[2]);
+        Register regOne = funcMap.get(instruction.operands[1].toString());
+        Register regTwo = funcMap.get(instruction.operands[2].toString());
+        if(regOne == null) {
+            Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
+        } 
+        if(regTwo == null) {
+            imm valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()));
+        }
 
         switch(instruction.opCode) {
             
             case ADD: 
-                if(sourceOne == null && sourceTwo == null) {
-                    Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
-                    imm valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()));
+                if(regOne == null && regTwo == null) {
                     return mipsCreator.createAdd(destReg, valOne, valTwo);
-                } else if (sourceTwo == null) { 
-                    Register regOne = new Register(sourceOne);
-                    Imm valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
+                } else if (regTwo == null) { 
                     return mipsCreator.createAdd(destReg, regOne, valTwo);
                 } else {
-                    Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()));
-                    Register regTwo = new Register(sourceTwo);
                     return mipsCreator.createAdd(destReg, regTwo, valOne);
                 }
 
             case SUB:
-                if(sourceOne == null && sourceTwo == null) {
-                    Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
-                    Imm valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()) * - 1);
+                if(regOne == null && regTwo == null) {
+                    valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()) * - 1);
                     return mipsCreator.createSub(destReg, valOne, valTwo);
                 }
-                else if (sourceTwo == null) { 
-                    Register regOne = new Register(sourceOne);
-                    Imm valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()) * - 1);
+                else if (regTwo == null) { 
+                    valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()) * - 1);
                     return mipsCreator.createSub(destReg, regOne, valTwo);
                 }
                 else {
-                    Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
-                    Register regTwo = new Register(sourceTwo);
                     return mipsCreator.createSub(destReg, valOne, regTwo);
                 }
 
@@ -209,32 +215,20 @@ public class InstructionConverter {
             case DIV:
 
             case AND:
-                if(sourceOne == null && sourceTwo == null) {
-                    Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
-                    Imm valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()));
+                if(regOne == null && regTwo == null) {
                     return mipsCreator.createAnd(destReg, valOne, valTwo);
                 } else if (sourceTwo == null) { // else just make sure to put immediate last
-                    Register regOne = new Register(sourceOne);
-                    Imm valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()));
                     return mipsCreator.createAnd(destReg, regOne, valTwo);
                 } else {
-                    Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
-                    Register regTwo = new Register(sourceTwo);
                     return mipsCreator.createAnd(destReg, regTwo, valOne);
                 }
 
             case OR:
                 if(sourceOne == null && sourceTwo == null) {
-                    Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
-                    Imm valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()));
                     return mipsCreator.createOr(destReg, valOne, valTwo);
                 } else if (sourceTwo == null) { 
-                    Register regOne = new Register(sourceOne);
-                    Imm valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()));
                     return mipsCreator.createOr(destReg, regOne, valTwo);
                 } else {
-                    Imm valOne = new Imm("DEC", Integer.parseInt(instruction.operands[1].toString()));
-                    Register regTwo = new Register(sourceTwo);
                     return mipsCreator.createOr(destReg, regTwo, valOne);
                 } 
         }
@@ -269,10 +263,43 @@ public class InstructionConverter {
                 return true;
             }
             // TODO: handle case where immediate is an array
-            // TODO: handle case where immediate is a float 
             // TODO: handle case where immediate is smaller then - 1 * 0xFFFF or larger then 0xFFFF
         }
         return false;
 
+    }
+
+    // method should be called after every function to wipe values from function mapping!
+    public void clearFuncMap() {
+        // add funcMap values to regMap
+        HashMap<String, Integer> hardCopy = new HashMap<>();
+        // Iterate over the original HashMap and copy each entry to the new HashMap
+        for (Map.Entry<Integer, String> entry : funcMap.entrySet()) {
+            hardCopy.put(entry.getKey(), entry.getValue());
+        }
+        regMap.add(hardCopy);
+        
+        // clear funcMap so it can be used for the next function
+        funcMap.clear();
+    }
+
+
+    // method should ONLY be used on destination registers which can either already be in funcMap or need to be allocated,
+    // ALL SOURCE REGISTERS SHOULD ALREADY BE IN funcMap!
+    private Register variableToRegister(IROperand operand) {
+        Register returnReg;
+        if(funcMap.get(operand.toString()) == null) {
+            returnReg = new Register(getEmptyRegister);
+            funcMap.put(operand.toString(), returnReg);
+        } else {
+            returnReg = funcMap.get(operand.toString());
+        }
+        return returnReg;
+    }
+
+    private String getEmptyRegister() {
+        String returnString = largestRegVal + ""
+        largestRegVal ++;
+        return returnString;
     }
 }

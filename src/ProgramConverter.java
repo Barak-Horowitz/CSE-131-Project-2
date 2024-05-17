@@ -7,12 +7,12 @@ import mips.*;
 
 public class ProgramConverter {
     private IRProgram IRProg;
-    private Map<Integer, MIPSInstruction> instructionSet;
+    private HashMap<Integer, MIPSInstruction> instructionSet;
 
 
     public ProgramConverter(IRPRogram IRProg) {
         this.IRProg = IRProg;
-        instructionSet = new Map<>():
+        instructionSet = new HashMap<>():
     }
 
     public MIPSProgram convertIRProg() {
@@ -65,6 +65,8 @@ public class ProgramConverter {
                 currIndex ++;
 
             }
+            // clear function map after finishing with function conversion
+            instructionConverter.clearFuncMap();
 
             
         }
@@ -73,5 +75,13 @@ public class ProgramConverter {
     
     private void convertRegisters() {
         return null
+    }
+
+    private List<MIPSInstruction> convertHeader(IRInstruction header) {
+        return null;
+    }
+
+    private List<MIPSInstruction> convertFooter (int index) {
+        return null;
     }
 }
