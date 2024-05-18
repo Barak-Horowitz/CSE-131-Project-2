@@ -11,6 +11,7 @@ public class InstructionConverter {
 
     private final String ARGSREG = "4";
     private final String RETURNREG = "2";
+    private final int numPrivateRegisters = 8;
 
     // stores which variables have been allocated inside of a program
     private ArrayList<HashMap<String, Register>> regMap;
@@ -19,13 +20,14 @@ public class InstructionConverter {
     private HashMap<String, Register> funcMap;
 
     private int largestRegVal;
+
     
 
     public InstructionConverter {
         mipsCreator = new InstructionCreator();
         regMap = new ArrayList<>();
         funcMap = new HashMap<>();
-        largestRegVal = 0;
+        largestRegVal = numPrivateRegisters; // first numPrivateRegisters are not available to user
     }
 
     public List<MIPSInstruction> convertInstruction(IRInstruction instruction) {  
@@ -209,24 +211,37 @@ public class InstructionConverter {
                     return mipsCreator.createSub(destReg, valOne, regTwo);
                 }
 
-            // TODO: figure out if MULT or DIV accept immediate values
             case MULT:
-
+                if(regOne == null && regTwo == null) {
+                    // need two registers to make an immediate multiplication
+                    return mipsCreator.createMult(destReg, tempReg valOne, valTwo);
+                } else if (regTwo == null) {
+                    return mipsCreator.createMult(destReg, regOne, valTwo);
+                } else {
+                    return mipsCreator.createMove(destReg, regTwo, valOne);
+                }
             case DIV:
+                if(regOne == null && regTwo == null) {
+                    return mipsCreator.createMult(destReg, valOne, valTwo);
+                } else if (regTwo == null) {
+                    return mipsCreator.createMult(destReg, regOne, valTwo);
+                } else {
+                    return mipsCreator.createMove(destReg, valOne, regTwo);
+                }
 
             case AND:
                 if(regOne == null && regTwo == null) {
                     return mipsCreator.createAnd(destReg, valOne, valTwo);
-                } else if (sourceTwo == null) { // else just make sure to put immediate last
+                } else if (regTwo == null) { // else just make sure to put immediate last
                     return mipsCreator.createAnd(destReg, regOne, valTwo);
                 } else {
                     return mipsCreator.createAnd(destReg, regTwo, valOne);
                 }
 
             case OR:
-                if(sourceOne == null && sourceTwo == null) {
+                if(regOne == null && regTwo == null) {
                     return mipsCreator.createOr(destReg, valOne, valTwo);
-                } else if (sourceTwo == null) { 
+                } else if (regTwo == null) { 
                     return mipsCreator.createOr(destReg, regOne, valTwo);
                 } else {
                     return mipsCreator.createOr(destReg, regTwo, valOne);

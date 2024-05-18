@@ -8,6 +8,7 @@ import mips.*;
 
 public class InstructionCreator {
     private final Register zeroReg = new Register(0);
+    private final Register tempReg = new Register(4); // USE ARGUMENTS REGISTER AS TEMPORARY FOR MULTS/DIVS
     // TODO: fill in creation methods
     
     // ARITHMETIC OPERATIONS
@@ -93,12 +94,61 @@ public class InstructionCreator {
         returnList.add(mult);
         return returnList;
     }
+
+    // I Type
+    public List<IRInstruction> createMult(Register destReg, Register sourceOneReg, Imm valTwo) {
+        List<IRInstruction> returnList = new LinkedList<();
+        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, destReg, zeroReg, valTwo);
+        MIPSInstruction mult = new MIPSInstruction(MIPSOp.MULT, destReg, destReg, sourceOneReg);
+        returnList.add(mult);
+        return returnList;
+    }
+
+    // I Type 
+    public List<IRInstruction> createMult(Register destReg, Imm valOne, Imm valTwo) {
+        List<IRInstruction> returnList = new LinkedList<();
+        MIPSInstruction addFirst = new MIPSInstruction(MIPSOp.ADDI, destReg, zeroReg, valOne);
+        MIPSInstruction addSecond = new MIPSInstruction(MIPSOp.ADDI, tempReg, zeroReg, valTwo);
+        MIPSInstruction mult = new MIPSInstruction(MIPSOp.MULT, destReg, destReg, tempReg);
+        returnList.add(mult);
+    }
     
     // R Type
-    // TODO: figure out if divisions can have immediates in tiger!
     public List<IRInstruction> createDiv(Register destReg, Register sourceOneReg, Register sourceTwoReg) {
         List<IRInstruction> returnList = new LinkedList<();
         MIPSInstruction div = new MIPSInstruction(MIPSOp.DIV, destReg, sourceOneReg, sourceTwoReg);
+        returnList.add(div);
+        return returnList;
+    }
+
+    // I Type
+    public List<IRInstruction> createDiv(Register destReg, Register sourceOneReg, Imm valTwo) {
+        List<IRInstruction> returnList = new LinkedList<();
+        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, destReg, zeroReg, valTwo); 
+        MIPSInstruction div = new MIPSInstruction(MIPSOp.DIV, destReg, sourceOneReg, destReg);
+        returnList.add(add);
+        returnList.add(div);
+        return returnList;
+    }
+
+    // I Type
+    public List<IRInstruction> createDiv(Register destReg, Imm valOne , Register sourceTwoReg) {
+        List<IRInstruction> returnList = new LinkedList<();
+        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, destReg, zeroReg, valOne)
+        MIPSInstruction div = new MIPSInstruction(MIPSOp.DIV, destReg, destReg, sourceTwoReg);
+        returnList.add(add);
+        returnList.add(div);
+        return returnList;
+    }
+
+    // I Type
+    public List<IRInstruction> createDiv(Register destReg, Imm valOne, Imm valTwo) {
+        List<IRInstruction> returnList = new LinkedList<();
+        MIPSInstruction addFirst = new MIPSInstruction(MIPSOp.ADDI, destReg, zeroReg, valOne);
+        MIPSInstruction addSecond = new MIPSInstruction(MIPSOp.ADDI, tempReg, zeroReg, valTwo);
+        MIPSInstruction div = new MIPSInstruction(MIPSOp.DIV, destReg, destReg, tempReg);
+        returnList.add(addFirst);
+        returnList.add(addSecond);
         returnList.add(div);
         return returnList;
     }
@@ -228,18 +278,6 @@ public class InstructionCreator {
         returnList.add(move);
         returnList.add(returnJump);
         return returnList;
-    }
-
-    // moves arguments to correct registers for call IR command
-    public List<IRInstruction> createCallArguments(IRInstruction instruction) {
-        // load arguments into argument registers
-        for(int i = 1; i < instruction.operands.size; i++) {
-            // TODO: - ADD CHECK FOR IF ARGUMENT IS IMMEDIATE OR REGISTER!
-            Register sourceReg = new Register(regmap.get(instruction.operands[i]));
-            Register destReg = new Register(i - 1 + ARGSREG);
-            returnList.addAll(mipsCreator.createMove(destReg, sourceReg));
-        } // jump after loading arguments
-
     }
     
 }
