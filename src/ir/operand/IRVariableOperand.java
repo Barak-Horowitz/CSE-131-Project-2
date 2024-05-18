@@ -15,13 +15,10 @@ public class IRVariableOperand extends IROperand {
     public String getName() {
         return value;
     }
-<<<<<<< HEAD
 
     @Override
     public boolean equals(Object o) {
         if(!(o instanceof IRVariableOperand)) return false;
         return ((IRVariableOperand) o).getName().equals(getName());
     }
-=======
->>>>>>> 0502606 (first commit)
 }

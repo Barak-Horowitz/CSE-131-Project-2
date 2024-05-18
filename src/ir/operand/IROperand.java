@@ -22,12 +22,9 @@ public abstract class IROperand {
         return value;
     }
 
-<<<<<<< HEAD
     @Override
     public int hashCode() {
         return value.hashCode();
     }
 
-=======
->>>>>>> 0502606 (first commit)
 }

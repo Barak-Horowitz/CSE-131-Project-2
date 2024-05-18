@@ -1,11 +1,9 @@
 #!/bin/bash
 
-<<<<<<< HEAD
 # write a bash script that runs optimizer in this file.
 # script takes one argument, a path to the input ir file 
 # script outputs an optimized ir file named out.ir
 java -cp build IRCompiler ${1} > out.ir
-=======
 # Write a script to run your backend
 # This script must take exactly one terminal argument:
 # a path to an input IR file. It should also take one
@@ -20,4 +18,3 @@ java -cp build IRCompiler ${1} > out.ir
 # Produces out . s
 # run.sh path/to/file.ir --greedy
 # Produces out . s
->>>>>>> 0502606 (first commit)

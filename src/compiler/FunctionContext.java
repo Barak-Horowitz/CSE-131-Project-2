@@ -122,7 +122,6 @@ public class FunctionContext {
 
     public IRFunction getOptimizedFunction() {
         LinkedList<IRInstruction> ninstr = new LinkedList<>();
-        IRFunction nfnc = new IRFunction(function.name, function.returnType, function.parameters, function.variables, ninstr);
 
         for(BlockContext ctx : blocks) {
             for(String label : ctx.labels) {
@@ -131,6 +130,6 @@ public class FunctionContext {
             ninstr.addAll(ctx.instructions);
         }
 
-        return nfnc;
+        return new IRFunction(function.name, function.returnType, function.parameters, function.variables, ninstr);
     }
 }

@@ -1,11 +1,11 @@
-package main.java.mips;
+package isa.mips;
 
 import java.util.Arrays;
 import java.util.List;
 
-import main.java.mips.operand.MIPSOperand;
-import main.java.mips.operand.Register;
-import main.java.mips.operand.Addr;
+import isa.mips.operand.MIPSOperand;
+import isa.mips.operand.Register;
+import isa.mips.operand.Addr;
 
 public class MIPSInstruction {
 

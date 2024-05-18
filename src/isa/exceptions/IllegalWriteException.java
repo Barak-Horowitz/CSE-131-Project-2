@@ -1,4 +1,4 @@
-package main.java.exceptions;
+package isa.exceptions;
 
 public class IllegalWriteException extends RuntimeException {
     public IllegalWriteException() {

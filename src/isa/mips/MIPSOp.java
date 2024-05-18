@@ -1,4 +1,4 @@
-package main.java.mips;
+package isa.mips;
 
 public enum MIPSOp {
     ADD, ADDI, SUB, MUL, DIV, AND, ANDI, OR, ORI, SLL, // bin ops

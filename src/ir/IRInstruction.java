@@ -1,11 +1,8 @@
 package ir;
 
-<<<<<<< HEAD
 import ir.operand.*;
 import java.lang.StringBuilder;
-=======
 import ir.operand.IROperand;
->>>>>>> 0502606 (first commit)
 
 public class IRInstruction {
 
@@ -39,7 +36,6 @@ public class IRInstruction {
         this.irLineNumber = irLineNumber;
     }
 
-<<<<<<< HEAD
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -135,6 +131,4 @@ public class IRInstruction {
         }
         return false;
     }
-=======
->>>>>>> 0502606 (first commit)
 }

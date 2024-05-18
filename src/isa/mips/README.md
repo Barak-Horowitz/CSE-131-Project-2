@@ -17,7 +17,7 @@ javac -d build -cp src src/main/java/mips/MIPSInterpreter.java
 To run a MIPS program, run:
 
 ```
-java -cp build main.java.mips.MIPSInterpreter file.s
+java -cp build isa.mips.MIPSInterpreter file.s
 ```
 
 Replace `file.s` with the path to the file you want to run.
@@ -25,13 +25,13 @@ Replace `file.s` with the path to the file you want to run.
 To run a MIPS program with inputs stored in another file, run:
 
 ```
-java -cp build main.java.mips.MIPSInterpreter file.s < in
+java -cp build isa.mips.MIPSInterpreter file.s < in
 ```
 
 or
 
 ```
-java -cp build main.java.mips.MIPSInterpreter --in in file.s
+java -cp build isa.mips.MIPSInterpreter --in in file.s
 ```
 
 Replace `file.s` and `in` with the names of the MIPS assembly file and input file, respectively.
@@ -44,7 +44,7 @@ examine memory contents.
 To run a MIPS program with debugging turned on, run:
 
 ```
-java -cp build main.java.mips.MIPSInterpreter --debug file.s
+java -cp build isa.mips.MIPSInterpreter --debug file.s
 ```
 
 Replace `file.s` with the name of the file you want to run.
@@ -123,7 +123,7 @@ So, if you want to turn debugging on _and_ run feed an input file, don't use inp
 run
 
 ```
-java -cp build main.java.mips.MIPSInterpreter --debug --in in file.s
+java -cp build isa.mips.MIPSInterpreter --debug --in in file.s
 ```
 
 where `file.s` and `in` are the names of the MIPS assembly file and input file, respectively.

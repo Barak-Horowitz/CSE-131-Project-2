@@ -1,4 +1,4 @@
-package main.java.mips;
+package isa.mips;
 
 public class MemLayout {
 
