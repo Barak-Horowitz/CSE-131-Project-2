@@ -31,7 +31,11 @@ public class InstructionConverter {
     }
 
     public List<MIPSInstruction> convertInstruction(IRInstruction instruction) {  
-        
+        // EDGE CASE: if instruction is an IR function call handle seperatly 
+        if(IRFunctionCall(instruction)) {
+            return convertIRFunctionCall(instruction);
+        }
+
         // EDGE CASE: if operation manipulates memory handle seperatly
         switch(instruction.opCode) {
             case ARRAY_STORE:
@@ -269,6 +273,32 @@ public class InstructionConverter {
 
     }
 
+    private boolean IRFunctionCall(IRInstruction instruction) {
+        switch(instruction.opCode) {
+            case CALL:
+                switch(instruction.operands[0].getName()) {
+                    case "puti":
+                    case "putf":
+                    case "putc":
+                        return true;
+                    default:
+                        return false;
+                }
+
+            case CALLR: switch(instruction.operands[1].getName()) {
+                case "geti":
+                case "getf":
+                case "getc":
+                    return true;
+                default:
+                    return false;
+            }
+
+            default: return false;
+        }
+
+    }
+
     // if instruction has any numbers in its operands instead of variables it is an i-type instruction
     private boolean iType (IRInstruction instruction) {
         
@@ -277,7 +307,6 @@ public class InstructionConverter {
                 && Integer.parseInt(instruction.operands[i].getValueString()) <= 0xFFFF && Integer.parseInt(instruction.operands[i].getValueString() > (0xFFFF * -1))) {
                 return true;
             }
-            // TODO: handle case where immediate is an array
             // TODO: handle case where immediate is smaller then - 1 * 0xFFFF or larger then 0xFFFF
         }
         return false;
