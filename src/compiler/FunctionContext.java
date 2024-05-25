@@ -11,15 +11,12 @@ public class FunctionContext {
     public List<IRInstruction> allInstructions;
     public Map<String, BlockContext> labelLinks;
 
+    public Map<IRVariableOperand, Set<IRVariableOperand>> intersections = new HashMap<>();
+
     private IRFunction function;
 
     public FunctionContext(IRFunction function) throws IRException {
         this.function = function;
-
-        interpretBlocks();
-        linkBlocks();
-
-        optimize();
     }
 
     private void interpretBlocks() throws IRException {
@@ -96,7 +93,10 @@ public class FunctionContext {
         }
     }
 
-    private void optimize() {
+    public void optimize() throws IRException {
+        interpretBlocks();
+        linkBlocks();
+
         if(blocks.isEmpty()) return;
 
         Map<BlockContext, Set<IRInstruction>> criticals = new HashMap<>();
@@ -113,6 +113,11 @@ public class FunctionContext {
             // System.out.println(walk);
             criticals.get(walk.ctx).addAll(walk.walk());
             paths.addAll(walk.predecessors());
+
+            for(Map.Entry<IRVariableOperand,Set<IRVariableOperand>> e : walk.intersections.entrySet()) {
+                if(!intersections.containsKey(e.getKey())) intersections.put(e.getKey(), new java.util.HashSet<>());
+                intersections.get(e.getKey()).addAll(e.getValue());
+            }
         }
 
         for(BlockContext ctx : blocks) {
@@ -120,7 +125,7 @@ public class FunctionContext {
         }
     }
 
-    public IRFunction getOptimizedFunction() {
+    public IRFunction getFunction() {
         LinkedList<IRInstruction> ninstr = new LinkedList<>();
 
         for(BlockContext ctx : blocks) {

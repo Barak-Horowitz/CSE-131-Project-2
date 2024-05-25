@@ -10,8 +10,9 @@ public class IRCompiler {
 
         for(IRFunction fnc : program.functions) {
             FunctionContext ctx = new FunctionContext(fnc);
+            ctx.optimize();
 
-            new IRPrinter(System.out).printFunction(ctx.getOptimizedFunction());
+            new IRPrinter(System.out).printFunction(ctx.getFunction());
         }
     }
 }
