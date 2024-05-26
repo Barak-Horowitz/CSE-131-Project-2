@@ -8,8 +8,11 @@ import mips.*;
 
 public class InstructionCreator {
     private final Register zeroReg = new Register(0);
-    private final Register tempReg = new Register(4); // USE ARGUMENTS REGISTER AS TEMPORARY FOR MULTS/DIVS
-    // TODO: fill in creation methods
+    private final Register tempReg = new Register("at"); // USE ARGUMENTS REGISTER AS TEMPORARY FOR MULTS/DIVS
+    private final Register returnReg = new Register("v0");
+    private final Register argumentRegister = new Register("a0");
+    private final int SbrkSyscallNum = 9;
+    private final int offsetShift = 2;
     
     // ARITHMETIC OPERATIONS
 
@@ -279,5 +282,77 @@ public class InstructionCreator {
         returnList.add(returnJump);
         return returnList;
     }
-    
+
+    public List<IRInstruction> createArray(Register arrayPtrReg, Imm arraySize) {
+        List<IRInstruction> returnInstructions = new LinkedList<>();
+        // store syscall num in return register 
+        Imm sysCallNum = new Imm("DEC", SbrkSyscallNum);
+        returnInstructions.addAll(createAdd(returnReg, zeroReg, sysCallNum));
+        // move array size into argument register
+        returnInstructions.addAll(createAdd(argumentRegister, zeroReg, arraySize));
+        // call sbrk 
+        MIPSInstruction sbrk = new MIPSInstruction(MIPSOp.SYSCALL, "");
+        returnInstructions.add(sbrk);
+        // move pointer to arrayPtr register
+        returnInstructions.addAll(createMove(arrayPtrReg, returnReg));
+        return returnInstructions;
+    }
+
+    public List<IRInstruction> createArrayLoad(Register arrayStoreReg, Register arrayPtrReg, Imm offsetImm) {
+        List<IRInstruction> returnInstructions = new LinkedList<>();
+        // store offset in assembler temporary
+        returnList.addAll(createAdd(tempReg, zeroReg, offsetImm));
+        // left shift  to account for number of bytes in int
+        Imm shiftImm = new Imm("DEC", offsetShift);
+        MIPSInstruction sll = new MIPSInstruction(MIPSOp.SLL,"", tempReg, tempReg, shiftImm);
+        returnList.add(sll);
+        // add address of array to assembler temporary 
+        returnList.addAll(createAdd(tempReg, tempReg, arrayPtrReg));
+        MIPSInstruction arrayLoad = new MIPSInstruction(MIPSOp.LW, "", arrayStoreReg, tempReg);
+        returnList.add(arrayLoad);
+        return returnList;
+    }
+
+    public List<IRInstruction> createArrayLoad(Register arrayStoreReg, Register arrayPtrReg, Register offsetReg) {
+        List<IRInstruction> returnInstructions = new LinkedList<>();
+        //store offset in assembler temporary
+        returnList.addAll(createMove(tempReg, offsetReg));
+        // left shift to account for number of bytes in int
+        Imm shiftImm  = new Imm("DEC", offsetShift);
+        MIPSInstruction sll = new MIPSInstruction(MIPSOp.SLL, "", tempReg, tempReg, shiftImm);
+        // add address of array to assembler temporary
+        returnList.addAll(createAdd(tempReg, tempReg, arrayPtrReg));
+        MIPSInstruction arrayLoad = new MIPSInstruction(MIPSOp.LW, "", arrayStoreReg, tempReg);
+        returnList.add(arrayLoad);
+        return returnList;
+    }
+
+    public List<IRInstruction> createArrayStore(Register arrayStoreReg, Register arrayPtrReg, Imm offsetImm) {
+        List<IRInstruction> returnInstructions = new LinkedList<>();
+        // store offset in assembler temporary
+        returnList.addAll(createAdd(tempReg, zeroReg, offsetImm));
+        // left shift  to account for number of bytes in int
+        Imm shiftImm = new Imm("DEC", offsetShift);
+        MIPSInstruction sll = new MIPSInstruction(MIPSOp.SLL,"", tempReg, tempReg, shiftImm);
+        returnList.add(sll);
+        // add address of array to assembler temporary 
+        returnList.addAll(createAdd(tempReg, tempReg, arrayPtrReg));
+        MIPSInstruction arrayStore = new MIPSInstruction(MIPSOp.SW, "", arrayStoreReg, tempReg);
+        returnList.add(arrayStore);
+        return returnList;
+    }
+
+    public List<IRInstruction> createArrayStore(Register arrayStoreReg, Register arrayPtrReg, Register offsetReg) {
+        List<IRInstruction> returnInstructions = new LinkedList<>();
+        //store offset in assembler temporary
+        returnList.addAll(createMove(tempReg, offsetReg));
+        // left shift to account for number of bytes in int
+        Imm shiftImm  = new Imm("DEC", offsetShift);
+        MIPSInstruction sll = new MIPSInstruction(MIPSOp.SLL, "", tempReg, tempReg, shiftImm);
+        // add address of array to assembler temporary
+        returnList.addAll(createAdd(tempReg, tempReg, arrayPtrReg));
+        mipsInstruction arrayStore - new MIPSInstruction(MIPSOp.SW, "", arrayStoreReg, tempReg);
+        returnList.add(arrayStore);
+        return returnList;
+    }
 }

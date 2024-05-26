@@ -20,7 +20,7 @@ public class MipsCompiler {
         IRProgram program = file_reader.parseIRFile(args[0]);
 
         // initialize the converter to convert IR PROG to MIPS PROG
-        InstructionConverter IRToMips = new ProgramConverter(program);
+        ProgramConverter IRToMips = new ProgramConverter(program);
 
         // grab the converted MIPS PROG
         MIPSProgram convertedProg = ProgramConverter.convertIRProg();
