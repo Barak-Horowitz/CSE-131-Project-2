@@ -3,27 +3,29 @@ import ir.operand.*;
 import ir.IRInstruction.OpCode;
 import java.util.*;
 import java.io.*;
-import mips.*;
+import main.java.mips.*;
+import main.java.mips.operand.*;
+
 
 public class ProgramConverter {
     private IRProgram IRProg;
     private HashMap<Integer, MIPSInstruction> instructionSet;
 
-    private final int PCCounterSize = 4
+    private final int PCCounterSize = 4;
 
 
-    public ProgramConverter(IRPRogram IRProg) {
+    public ProgramConverter(IRProgram IRProg) {
         this.IRProg = IRProg;
-        instructionSet = new HashMap<>():
+        instructionSet = new HashMap<>();
     }
 
     public MIPSProgram convertIRProg() {
         convertInstructions();
         convertRegisters();
-        return;
+        return null;
     }
 
-    convertInstructions() {
+    private void convertInstructions() {
         InstructionConverter instructionConverter = new InstructionConverter();
         int currIndex = 0;
 
@@ -32,7 +34,7 @@ public class ProgramConverter {
             List<MIPSInstruction> headerInstruction = instructionConverter.convertHeader(function);
             
             for (MIPSInstruction mipsInstruction : headerInstruction) {
-                mipsInstructionSet.add(currIndex * PCCounterSize, mipsInstruction)
+                instructionSet.put(currIndex * PCCounterSize, mipsInstruction);
                 currIndex ++;
             }
 
@@ -41,7 +43,7 @@ public class ProgramConverter {
                 List<MIPSInstruction> mipsInstructions = instructionConverter.convertInstruction(instruction);
                 // add all created mips instructions to MIPS instruction set, update indices
                 for (MIPSInstruction mipsInstruction : mipsInstructions) {        
-                    mipsInstructionSet.add(currIndex * PCCounterSize, mipsInstruction)
+                    instructionSet.put(currIndex * PCCounterSize, mipsInstruction);
                     currIndex ++;
                 }
 
@@ -55,6 +57,6 @@ public class ProgramConverter {
     }
     
     private void convertRegisters() {
-        return null
+        return;
     }
 }

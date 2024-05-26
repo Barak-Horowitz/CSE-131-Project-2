@@ -1,36 +1,25 @@
 import ir.*;
+import ir.datatype.*;
 import ir.operand.*;
 import ir.IRInstruction.OpCode;
 import java.util.*;
 import java.io.*;
-import mips.*;
+import main.java.mips.*;
+import main.java.mips.operand.*;
 
 
 public class InstructionConverter {
     private InstructionCreator mipsCreator;
-
-    private final String ARGSREG = "a";
-    private final String TEMPREG = "t"
-    private final Register ZEROREG = new Register("0");
-    private final Register RETURNREG = new Register ("v0");
+    private final String argsReg = "a";
+    private final String tempReg = "t";
+    private final Register zeroReg = new Register("0");
+    private final Register returnReg = new Register ("v0");
     private int largestRegVal;
-
-
-    // stores which variables have been allocated inside of a program
-    private ArrayList<HashMap<String, Register>> regMap;
-
-    private ArrayList<HashMap<String, Integer> arrayMap;
-
-    // stores which variables have already been allocated inside of a function
+    private ArrayList<HashMap<String, Register>> regMap;     // stores which variables have been allocated inside of a program
+    private ArrayList<HashMap<String, Integer>> arrayMap;    // stores which variables have already been allocated inside of a function
     private HashMap<String, Register> funcMap;
-
-    private int largestRegVal;
-    
-    private InstructionCreator mipsCreator;
-
-    
-
-    public InstructionConverter {
+   
+    public InstructionConverter() {
         mipsCreator = new InstructionCreator();
         regMap = new ArrayList<>();
         funcMap = new HashMap<>();
@@ -41,7 +30,7 @@ public class InstructionConverter {
     // given the header for a function, allocate space for all of its variables, and 
     // move perameters out of argument registers 
     public List<MIPSInstruction> convertHeader(IRFunction function) {
-        List<MIPSInstruction> returnList = convertArguments(function)
+        List<MIPSInstruction> returnList = convertArguments(function);
         returnList.addAll(allocateVariables(function));
         return returnList;
 
@@ -50,25 +39,27 @@ public class InstructionConverter {
     public List<MIPSInstruction> convertArguments(IRFunction function) {
         List<MIPSInstruction> returnList = new LinkedList<>();
         for(int arg_num = 0; arg_num < function.parameters.size(); arg_num++) {
-            Register sourceReg = new Register(ARGSREG + arg_num);
+            Register sourceReg = new Register(argsReg + arg_num);
             Register destReg = variableToRegister(function.parameters.get(arg_num));
             returnList.addAll(mipsCreator.createMove(destReg, sourceReg));
         }
         return returnList;
     }
 
-    public void allocateVariables(IRFunction function) {
+    public List<MIPSInstruction> allocateVariables(IRFunction function) {
         List<MIPSInstruction> returnList = new LinkedList<>(); 
-        for(int var_num = 0; var_num < function.variables.size(); i++) {
+        for(int var_num = 0; var_num < function.variables.size(); var_num++) {
             // EDGE CASE: arrays can't be stored as registers, need to map into heap 
             if(function.variables.get(var_num).type instanceof IRArrayType) {
+                IRArrayType var = (IRArrayType) function.variables.get(var_num).type;
                 Register arrayPtrReg = variableToRegister(function.variables.get(var_num));
-                Imm arraySizeImm = new Imm("DEC", function.variables.get(var_num).getSize());
-                returnList.add(mipsCreator.createArray(arraySizeImm, arrayPtrReg));
+                Imm arraySizeImm = new Imm("" + var.getSize(), "DEC");
+                returnList.addAll(mipsCreator.createArray(arraySizeImm, arrayPtrReg));
                 
             }
             variableToRegister(function.variables.get(var_num));
         }
+        return returnList;
     }
 
     public List<MIPSInstruction> convertInstruction(IRInstruction instruction) {  
@@ -103,18 +94,14 @@ public class InstructionConverter {
                 if(printReg == null) {
                     printVal = createImmediate(instruction.operands[1]);
                 }
-                switch(instruction.operands[0].getName()) {
+                switch(instruction.operands[0].toString()) {
                     case "puti":
                         if(printReg == null) {
                             return mipsCreator.createPUTI(printVal);
                         }
                         return mipsCreator.createPUTI(printReg);
                     
-                    case "putf":
-                        if(printReg == null) {
-                            return mipsCreator.createPUTF(printVal);
-                        }
-                        return mipsCreator.PUTF(printReg);
+
                     case "putc":
                         if(printReg == null) {
                             return mipsCreator.createPUTC(printVal);
@@ -122,17 +109,18 @@ public class InstructionConverter {
                         return mipsCreator.createPUTC(printReg);
                 }
 
-            case CALLR: switch(instruction.operands[1].getName()) {
+            case CALLR: 
                 Register returnReg = variableToRegister(instruction.operands[0]);
+                switch(instruction.operands[1].toString()) {
                 case "geti":
-                    return createGETI(returnReg);
-                case "getf":
-                    return createGETF(returnReg);
+                    return mipsCreator.createGETI(returnReg);
                 case "getc":
-                    return createGETC(returnReg);
+                    return mipsCreator.createGETC(returnReg);
 
-            }
-
+                }
+            
+        }
+        return null;
     }
 
     private List<MIPSInstruction> convertDataType(IRInstruction instruction) {
@@ -148,55 +136,57 @@ public class InstructionConverter {
             // if load grab array value from memory 
             case ARRAY_LOAD:
                 // if immediate grab immediate 
-                if(offset == null) {
+                if(offsetReg == null) {
                     Imm offsetImm = createImmediate(instruction.operands[2]);
-                    return InstructionCreator.createArrayLoad(arrayStoreReg, arrayPtrReg, offsetImm);
+                    return mipsCreator.createArrayLoad(arrayStoreReg, arrayPtrReg, offsetImm);
                 }
-                return InstructionCreator.createArrayLoad(arrayStoreReg, arrayPtrReg, offsetReg);
+                return mipsCreator.createArrayLoad(arrayStoreReg, arrayPtrReg, offsetReg);
 
             // if store, store reg value in array
             case ARRAY_STORE:
                 // if immediate grab immediate
-                if(offset == null) {
+                if(offsetReg == null) {
                     Imm offsetImm = createImmediate(instruction.operands[2]);
-                    return InstructionCreator.createArrayStore(arrayStoreReg, arrayPtrReg, offsetImm);
+                    return mipsCreator.createArrayStore(arrayStoreReg, arrayPtrReg, offsetImm);
                 }
-                return InstructionConverter.createArrayStore(arrayStoreReg, arrayPtrReg, offsetImm);
+                return mipsCreator.createArrayStore(arrayStoreReg, arrayPtrReg, offsetReg);
         }
+        return null;
         
     }
 
     private List<MIPSInstruction> convertJType(IRInstruction instruction) {
         List<MIPSInstruction> returnList = new LinkedList<>();
         switch(instruction.opCode) {
-            case GOTO:
-                String label = instruction.operands[0].getValue();
+            case GOTO: {
+                String label = instruction.operands[0].toString();
                 Addr labelAddress = new Addr(label);
                 return mipsCreator.createJump(labelAddress);
-            
-            case CALL:
+            }
+            case CALL: {
                 // load arguments into argument registers
-                for(int i = 1; i < instruction.operands.size; i++) {
+                for(int i = 1; i < instruction.operands.length; i++) {
                     // TODO: - ADD CHECK FOR IF ARGUMENT IS IMMEDIATE OR REGISTER!
                     Register sourceReg = (funcMap.get(instruction.operands[i].toString()));
-                    Register destReg = new Register(ARGSREG + (i - 1));
+                    Register destReg = new Register(argsReg + (i - 1));
                     if(sourceReg == null) {
                         Imm sourceImm = createImmediate(instruction.operands[i]);
-                        returnList.addAll(mipsCreator.createAdd(destReg, ZEROREG, sourceImm));
+                        returnList.addAll(mipsCreator.createAdd(destReg, zeroReg, sourceImm));
                     } else {
                         returnList.addAll(mipsCreator.createMove(destReg, sourceReg));
+                    } 
                 } // jump after loading arguments
-                String label = instruction.operands[0].getValue();
+                String label = instruction.operands[0].toString();
                 Addr labelAddress = new Addr(label);
                 returnList.addAll(mipsCreator.createLinkedJump(labelAddress));
                 return returnList;
-            
-            case CALLR:
+            }
+            case CALLR: {
                 // load arguments into argument registers
-                for(int i = 2; i < instruction.operands.size; i++) {
+                for(int i = 2; i < instruction.operands.length; i++) {
                     // TODO: - ADD CHECK FOR IF ARGUMENT IS IMMEDIATE OR REGISTER!
                     Register sourceReg = funcMap.get(instruction.operands[i].toString());
-                    Register destReg = new Register(ARGSREG + (i - 2));
+                    Register destReg = new Register(argsReg + (i - 2));
                     if(sourceReg == null) {
                         Imm sourceImm = createImmediate(instruction.operands[i]);
                         returnList.addAll(mipsCreator.createAdd(destReg, zeroReg, sourceImm));
@@ -204,119 +194,98 @@ public class InstructionConverter {
                         returnList.addAll(mipsCreator.createMove(destReg, sourceReg));
                     }
                 } // jump after loading arguments
-                String label = instruction.operands[1].getValue();
+                String label = instruction.operands[1].toString();
                 Addr labelAddress = new Addr(label);
                 returnList.addAll(mipsCreator.createLinkedJump(labelAddress)); 
                 Register destReg = variableToRegister(instruction.operands[0]);
-                register sourceReg = new Register(RETURNREG);
-                returnList.addAll(mipsCreator.createMove(destReg, sourceReg));
+                returnList.addAll(mipsCreator.createMove(destReg, returnReg));
                 return returnList;
-            
-            case LABEL:
-                String labelName = instruction.operands[0].getValue()
+            }
+            case LABEL: {
+                String labelName = instruction.operands[0].toString();
                 return mipsCreator.createLabel(labelName);
-
-            case RETURN: 
-                Register sourceReg = variableToRegister(instruction.operands[0]);
-                Register destReg = new Register(RETURNREG);
-                return mipsCreator.createReturn(destReg, sourceReg);
-        
+            }
+            case RETURN: {
+                Register destReg = variableToRegister(instruction.operands[0]);
+                return mipsCreator.createReturn(destReg, returnReg);
+            }
             // if none of these cases are hit instruction must be a conditional branch
-            default:
+            default: {
                 return convertConditionalBranch(instruction);
-        
+            }
         }
     }
     
     private List<MIPSInstruction> convertConditionalBranch(IRInstruction instruction) {
-        String label = instruction.operands[0].getValue();
+        String label = instruction.operands[0].toString();
         Addr labelAddress = new Addr(label);
-        Register sourceRegOne = funcMap.get(instructions.operands[1].toString());
-        Register sourceRegTwo = funcMap.get(instructions.operands[2].toString());
+        Register sourceRegOne = funcMap.get(instruction.operands[1].toString());
+        Register sourceRegTwo = funcMap.get(instruction.operands[2].toString());
         Imm immValOne = null;
         Imm immValTwo = null;
         if(sourceRegOne == null) {
             immValOne = createImmediate(instruction.operands[1]);
         }
         if(sourceRegTwo == null) {
-            immValTwo = createImmediate(instruction.operands[2])
+            immValTwo = createImmediate(instruction.operands[2]);
         }
         
         // TODO: HANDLE CASES WHERE CONDITIONAL BRANCHES CONTAIN IMMEDIATE VALUES
         switch(instruction.opCode) {
-            case BRNEQ:
-                if(sourceRegOne == null && sourceRegTwo == null) {
-                    return mipsCreator.createBRNEQ(labelName, immValOne, immvalTwo)
-
-                }
+            case BRNEQ: {
                 if(sourceRegOne == null) {
-                    return mipsCreator.createBRNEQ(labelName, immValOne, sourceRegTwo);
+                    return mipsCreator.createBRNEQ(labelAddress, sourceRegTwo, immValOne);
                 }
                 if(sourceRegTwo == null) {
-                    return mipsCreator.createBRNEQ(labelName, immValTwo, sourceRegOne);
+                    return mipsCreator.createBRNEQ(labelAddress, sourceRegOne, immValTwo);
                 }
-                return mipsCreator.createBrneq(labelName, sourceRegOne, sourceRegTwo);
-        
-            case BREQ:
-                if(sourceRegOne == null && sourceRegTwo == null) {
-                    return mipsCreator.createBREQ(labelName, immValOne, immvalTwo);
-                }   
+                return mipsCreator.createBRNEQ(labelAddress, sourceRegOne, sourceRegTwo);
+            }
+            case BREQ: {
                 if(sourceRegOne == null) {
-                    return mipsCreator.createBREQ(labelName, immValOne, sourceRegTwo);
+                    return mipsCreator.createBREQ(labelAddress, sourceRegTwo, immValOne);
                 }
                 if(sourceRegTwo == null) {
-                    return mipsCreator.createBREQ(labelName,immValTwo, sourceRegOne);
+                    return mipsCreator.createBREQ(labelAddress, sourceRegOne, immValTwo);
                 }
-                return mipsCreator.createBreq(labelName, sourceRegOne, sourceRegTwo);
-        
-            case BRLT:
-                if(sourceRegOne == null && sourceRegTwo == null) {
-                    return mipsCreator.createBRLT(labelName, immValOne, immValTwo);
-                }
+                return mipsCreator.createBREQ(labelAddress, sourceRegOne, sourceRegTwo);
+            }
+            case BRLT: {
                 if(sourceRegOne == null) {
-                    return mipsCreator.createBRLT(labelName, immValOne, sourceRegTwo);
+                    return mipsCreator.createBRLT(labelAddress, immValOne, sourceRegTwo);
                 }   
                 if(sourceRegTwo == null) {
-                    return mipsCreator.createBRLT(labelName, sourceRegOne, immValTwo);
+                    return mipsCreator.createBRLT(labelAddress, sourceRegOne, immValTwo);
                 }
-                return mipsCreator.createBRLT(labelName, sourceRegOne, sourceRegTwo);
-        
-            case BRGT:
-                if(sourceRegOne == null && sourceRegTwo == null) {
-                    return mipsCreator.createBRGT(labelName, immValOne, immValTwo);
-
-                }
+                return mipsCreator.createBRLT(labelAddress, sourceRegOne, sourceRegTwo);
+            }
+            case BRGT: {
                 if(sourceRegOne == null) {
-                    return mipsCreator.createBRGT(labelName, immValOne, sourceRegTwo);
+                    return mipsCreator.createBRGT(labelAddress, immValOne, sourceRegTwo);
                 }
                 if(sourceRegTwo == null) {
-                    return mipsCreator.createBRGT(labelName, sourceRegOne, immValTwo);
+                    return mipsCreator.createBRGT(labelAddress, sourceRegOne, immValTwo);
                 }
-                return mipsCreator.createBRGT(labelName, sourceRegOne, sourceRegTwo);
-
-            case BRGEQ:
-                if(sourceRegOne == null && sourceRegTwo == null) {
-                    return mipsCreator.createBRGEQ(labelName, immValOne, immValTwo);
-                }
+                return mipsCreator.createBRGT(labelAddress, sourceRegOne, sourceRegTwo);
+            }
+            case BRGEQ: {
                 if(sourceRegOne == null) {
-                    return mipsCreator.createBRGEQ(labelName, immValOne, sourceRegTwo);
+                    return mipsCreator.createBRGEQ(labelAddress, immValOne, sourceRegTwo);
                 }
                 if(sourceRegTwo == null) {
-                    return mipsCreator.createBRGEQ(labelName, sourceRegOne, immValTwo);
+                    return mipsCreator.createBRGEQ(labelAddress, sourceRegOne, immValTwo);
                 }
-                return mipsCreator.createBRGEQ(labelName, sourceRegOne, sourceRegTwo);
-            
-            case BRLEQ:
-                if(sourceRegOne == null && sourceRegTwo == null) {
-                    return mipsCreator.createBRLEQ(labelName, immValOne, immValTwo);
-                }
+                return mipsCreator.createBRGEQ(labelAddress, sourceRegOne, sourceRegTwo);
+            }
+            case BRLEQ: {
                 if(sourceRegOne == null) {
-                    return mipsCreator.createBRLEQ(labelName, immValOne, sourceRegTwo);
+                    return mipsCreator.createBRLEQ(labelAddress, immValOne, sourceRegTwo);
                 }
                 if(sourceRegTwo == null) {
-                    return mipsCreator.createBRLEQ(labelName, immValOne, sourceRegTwo);
+                    return mipsCreator.createBRLEQ(labelAddress, immValOne, sourceRegTwo);
                 }
-                return mipsCreator.createBrleq(labelName, sourceRegOne, sourceRegTwo);
+                return mipsCreator.createBRLEQ(labelAddress, sourceRegOne, sourceRegTwo);
+            }
         }
 
         System.out.println("ERRROR SHOULD NEVER BE HIT");
@@ -327,53 +296,54 @@ public class InstructionConverter {
     private List<MIPSInstruction> convertRType(IRInstruction instruction) {
         Register destReg = variableToRegister(instruction.operands[0]);
         Register sourceRegOne = variableToRegister(instruction.operands[1]);
-        if(instruction.operands.size == 2) { // if only two operands exist must be an assign
+        if(instruction.operands.length == 2) { // if only two operands exist must be an assign
             return mipsCreator.createMove(destReg, sourceRegOne);
         }
         Register sourceRegTwo = variableToRegister(instruction.operands[2]);
         switch(instruction.opCode) {
             
-            case ADD:
+            case ADD: {
                 return mipsCreator.createAdd(destReg, sourceRegOne, sourceRegTwo);
-
-            case SUB:
+            }
+            case SUB: {
                 return mipsCreator.createSub(destReg, sourceRegOne, sourceRegTwo);
-
-            case MULT:
+            }
+            case MULT: {
                 return mipsCreator.createMult(destReg, sourceRegOne, sourceRegTwo);
-
-            case DIV:
+            }
+            case DIV: {
                 return mipsCreator.createDiv(destReg, sourceRegOne, sourceRegTwo);
-
-            case AND:
+            }
+            case AND: {
                 return mipsCreator.createAnd(destReg, sourceRegOne, sourceRegTwo);
-            
-            case OR:
+            }
+            case OR: {
                 return mipsCreator.createOr(destReg, sourceRegOne, sourceRegTwo);
+            }
         }
+        return null;
     }
 
-    private List<MIPSInstruction convertIType(IRInstruction instruction) {
+    private List<MIPSInstruction> convertIType(IRInstruction instruction) {
         Imm valOne = null;
         Imm valTwo = null;
         Register destReg = variableToRegister(instruction.operands[0]);
-        Register zeroReg = new Register('0');
         Register regOne = funcMap.get(instruction.operands[1].toString());
-        if(instruction.operands.size == 2) { // if only two operands exist must be an assign
-            Imm valOne = createImmediate(instruction.operands[1]);
-            return createAdd(destReg, regOne, valOne);
+        if(instruction.operands.length == 2) { // if only two operands exist must be an assign
+            valOne = createImmediate(instruction.operands[1]);
+            return mipsCreator.createAdd(destReg, regOne, valOne);
         }
         Register regTwo = funcMap.get(instruction.operands[2].toString());
         if(regOne == null) {
-            Imm valOne = createImmediate(instruction.operands[1])
+            valOne = createImmediate(instruction.operands[1]);
         } 
         if(regTwo == null) {
-            imm valTwo = createImmediate(instruction.operands[2]);
+            valTwo = createImmediate(instruction.operands[2]);
         }
 
         switch(instruction.opCode) {
             
-            case ADD: 
+            case ADD: {
                 if(regOne == null && regTwo == null) {
                     return mipsCreator.createAdd(destReg, valOne, valTwo);
                 } else if (regTwo == null) { 
@@ -381,38 +351,37 @@ public class InstructionConverter {
                 } else {
                     return mipsCreator.createAdd(destReg, regTwo, valOne);
                 }
-
-            case SUB:
+            }
+            case SUB: {
                 if(regOne == null && regTwo == null) {
-                    valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()) * - 1);
                     return mipsCreator.createSub(destReg, valOne, valTwo);
                 }
                 else if (regTwo == null) { 
-                    valTwo = new Imm("DEC", Integer.parseInt(instruction.operands[2].toString()) * - 1);
                     return mipsCreator.createSub(destReg, regOne, valTwo);
                 }
                 else {
                     return mipsCreator.createSub(destReg, valOne, regTwo);
                 }
-
-            case MULT:
-                if(regOne == null && regTwo == null) {
-                    return mipsCreator.createMult(destReg, tempReg valOne, valTwo);
-                } else if (regTwo == null) {
-                    return mipsCreator.createMult(destReg, regOne, valTwo);
-                } else {
-                    return mipsCreator.createMove(destReg, regTwo, valOne);
-                }
-            case DIV:
+            }
+            case MULT: {
                 if(regOne == null && regTwo == null) {
                     return mipsCreator.createMult(destReg, valOne, valTwo);
                 } else if (regTwo == null) {
                     return mipsCreator.createMult(destReg, regOne, valTwo);
                 } else {
-                    return mipsCreator.createMove(destReg, valOne, regTwo);
+                    return mipsCreator.createMult(destReg, regTwo, valOne);
                 }
-
-            case AND:
+            }
+            case DIV: {
+                if(regOne == null && regTwo == null) {
+                    return mipsCreator.createDiv(destReg, valOne, valTwo);
+                } else if (regTwo == null) {
+                    return mipsCreator.createDiv(destReg, regOne, valTwo);
+                } else {
+                    return mipsCreator.createDiv(destReg, valOne, regTwo);
+                }
+            }
+            case AND: {
                 if(regOne == null && regTwo == null) {
                     return mipsCreator.createAnd(destReg, valOne, valTwo);
                 } else if (regTwo == null) { 
@@ -420,8 +389,8 @@ public class InstructionConverter {
                 } else {
                     return mipsCreator.createAnd(destReg, regTwo, valOne);
                 }
-
-            case OR:
+            }
+            case OR: {
                 if(regOne == null && regTwo == null) {
                     return mipsCreator.createOr(destReg, valOne, valTwo);
                 } else if (regTwo == null) { 
@@ -429,22 +398,24 @@ public class InstructionConverter {
                 } else {
                     return mipsCreator.createOr(destReg, regTwo, valOne);
                 } 
+            }
         }
+        return null;
     }
 
     private boolean jType (IRInstruction instruction) {
         
         switch(instruction.opCode) {
-            case(LABEL): 
-            case(GOTO):
-            case(BREQ):
-            case(BRLT):
-            case(BRGT):
-            case(BRLEQ):
-            case(BRGEQ):
-            case(RETURN):
-            case(CALL):
-            case(CALLR):
+            case LABEL: 
+            case GOTO:
+            case BREQ:
+            case BRLT:
+            case BRGT:
+            case BRLEQ:
+            case BRGEQ:
+            case RETURN:
+            case CALL:
+            case CALLR:
                 return true;
             default:
                 return false;
@@ -454,8 +425,8 @@ public class InstructionConverter {
 
     private boolean IRFunctionCall(IRInstruction instruction) {
         switch(instruction.opCode) {
-            case CALL:
-                switch(instruction.operands[0].getName()) {
+            case CALL: {
+                switch(instruction.operands[0].toString()) {
                     case "puti":
                     case "putf":
                     case "putc":
@@ -463,14 +434,18 @@ public class InstructionConverter {
                     default:
                         return false;
                 }
+            }
 
-            case CALLR: switch(instruction.operands[1].getName()) {
-                case "geti":
-                case "getf":
-                case "getc":
-                    return true;
-                default:
-                    return false;
+            case CALLR: {
+
+                switch(instruction.operands[1].toString()) {
+                    case "geti": 
+                    case "getf": 
+                    case "getc":
+                        return true;
+                    default:
+                        return false;
+                }
             }
 
             default: return false;
@@ -485,7 +460,7 @@ public class InstructionConverter {
             case ARRAY_STORE:
                 return true;
             case ASSIGN:
-                if(instruction.operands.size == 3) {
+                if(instruction.operands.length == 3) {
                     return true;
                 }
             default: return false;
@@ -495,23 +470,23 @@ public class InstructionConverter {
     // if instruction has any numbers in its operands instead of variables it is an i-type instruction
     private boolean iType (IRInstruction instruction) {
         
-        for(int i = 0; i < instruction.operands.size; i++) {
-            if(instruction.operands[i] instanceof IRConstantOperand && instruction.operands[i].type instanceof IRIntType
-                && Integer.parseInt(instruction.operands[i].getValueString()) <= 0x7FFF && Integer.parseInt(instruction.operands[i].getValueString() > (0x7FFF * -1))) {
-                return true;
-            }
-            // TODO: handle case where immediate is smaller then - 1 * 0xFFFF or larger then 0xFFFF
+        for(int i = 0; i < instruction.operands.length; i++) {
+            if(instruction.operands[i] instanceof IRConstantOperand) {
+                IRConstantOperand operand = (IRConstantOperand) instruction.operands[i];
+                if(operand.type instanceof IRIntType) {
+                    return true;
+                }
+            }        
         }
         return false;
-
     }
 
     // method should be called after every function to wipe values from function mapping!
     public void clearFuncMap() {
         // add funcMap values to regMap
-        HashMap<String, Integer> hardCopy = new HashMap<>();
+        HashMap<String, Register> hardCopy = new HashMap<>();
         // Iterate over the original HashMap and copy each entry to the new HashMap
-        for (Map.Entry<Integer, String> entry : funcMap.entrySet()) {
+        for (Map.Entry<String, Register> entry : funcMap.entrySet()) {
             hardCopy.put(entry.getKey(), entry.getValue());
         }
         regMap.add(hardCopy);
@@ -524,24 +499,24 @@ public class InstructionConverter {
     // method should ONLY be used on destination registers which can either already be in funcMap or need to be allocated,
     // ALL SOURCE REGISTERS SHOULD ALREADY BE IN funcMap!
     private Register variableToRegister(IROperand operand) {
-        Register returnReg;
+        Register newReg;
         if(funcMap.get(operand.toString()) == null) {
-            returnReg = new Register(getEmptyRegister);
+            newReg = new Register(getEmptyRegister());
             funcMap.put(operand.toString(), returnReg);
         } else {
-            returnReg = funcMap.get(operand.toString());
+            newReg = funcMap.get(operand.toString());
         }
-        return returnReg;
+        return newReg;
     }
 
     private String getEmptyRegister() {
-        String returnString = TEMPREG + largestRegVal
+        String returnString = tempReg + largestRegVal;
         largestRegVal ++;
         return returnString;
     }
 
     private Imm createImmediate(IROperand operand) {
-        immVal new Imm("DEC", Integer.parseInt(operand.toString()));
+        Imm immVal = new Imm("" + Integer.parseInt(operand.toString()), "DEC");
         return immVal;
     }
 }

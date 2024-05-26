@@ -3,39 +3,44 @@ import ir.operand.*;
 import ir.IRInstruction.OpCode;
 import java.util.*;
 import java.io.*;
-import mips.*;
+import main.java.mips.*;
+import main.java.mips.operand.*;
 
 
 public class InstructionCreator {
-    private final Register zeroReg = new Register(0);
+    private final Register zeroReg = new Register("0");
     private final Register tempReg = new Register("at"); // USE ARGUMENTS REGISTER AS TEMPORARY FOR MULTS/DIVS
     private final Register returnReg = new Register("v0");
-    private final Register argumentRegister = new Register("a0");
-    private final int SbrkSyscallNum = 9;
-    private final int offsetShift = 2;
+    private final Register argsReg = new Register("a0");
+    private final String SbrkSyscallNum = "9";
+    private final String printIntSyscallNum = "1";
+    private final String printCharSyscallNum = "11";
+    private final String getIntSyscallNum = "5";
+    private final String getCharSyscallNum = "12";
+    private final String offsetShift = "2";
     
     // ARITHMETIC OPERATIONS
 
-    public List<IRInstruction> createMove(Register destReg, Register sourceReg) {
-        List<IRInstruction> returnList = new LinkedList<();
+    public List<MIPSInstruction> createMove(Register destReg, Register sourceReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
         MIPSInstruction move = new MIPSInstruction(MIPSOp.MOVE, "", destReg, sourceReg);
-        returnList.add(move)
+        returnList.add(move);
         return returnList;
     }
 
 
     // R Type
-    public List<IRInstruction> createAdd(Register destReg, Register sourceOneReg, Register sourceTwoReg) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADD, destReg, sourceOneReg, sourceTwoReg);
+    public List<MIPSInstruction> createAdd(Register destReg, Register sourceOneReg, Register sourceTwoReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADD, "", destReg, sourceOneReg, sourceTwoReg);
         returnList.add(add);
         return returnList;
     }
 
     // I Type
-    public List<IRInstruction> createAdd(Register destReg, Register sourceOneReg, Imm valTwo) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, destReg, sourceOneReg, valTwo);
+    public List<MIPSInstruction> createAdd(Register destReg, Register sourceOneReg, Imm valTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, "", destReg, sourceOneReg, valTwo);
         returnList.add(add);
         return returnList;
 
@@ -43,36 +48,36 @@ public class InstructionCreator {
     }
 
     // I Type
-    public List<IRInstruction> createAdd(Register destReg, Imm valOne, Imm valTwo) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction addOne = new MIPSInstruction(MIPSOp.ADDI, destReg, zeroReg, valOne);
-        MIPSInstruction addTwo = new MIPSInstruction(MIPSOp.AddI, destReg, destReg, valTwo);
+    public List<MIPSInstruction> createAdd(Register destReg, Imm valOne, Imm valTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction addOne = new MIPSInstruction(MIPSOp.ADDI, "", destReg, zeroReg, valOne);
+        MIPSInstruction addTwo = new MIPSInstruction(MIPSOp.ADDI, "", destReg, destReg, valTwo);
         returnList.add(addOne);
         returnList.add(addTwo);
         return returnList;
     }
 
     // R Type 
-    public List<IRInstruction> createSub(Register destReg, Register sourceOneReg, Register sourceTwoReg) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction sub = new MIPSInstruction(MIPSOp.SUB, destReg, sourceOneReg, sourceTwoReg);
+    public List<MIPSInstruction> createSub(Register destReg, Register sourceOneReg, Register sourceTwoReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction sub = new MIPSInstruction(MIPSOp.SUB, "", destReg, sourceOneReg, sourceTwoReg);
         returnList.add(sub);
         return returnList;
     }
 
     // I Type
-    public List<IRInstruction> createSub(Register destReg, Register sourceOneReg, Imm valTwo) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction sub = new MIPSInstruction(MIPSOp.ADDI, destReg, sourceOneReg, valTwo);
+    public List<MIPSInstruction> createSub(Register destReg, Register sourceOneReg, Imm valTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction sub = new MIPSInstruction(MIPSOp.ADDI, "", destReg, sourceOneReg, valTwo);
         returnList.add(sub);
         return returnList;
     }
 
     // I Type
-    public List<IRInstruction> createSub(Register destReg, Imm valOne, Register sourceTwoReg) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, destReg, zeroReg, valOne);
-        MIPSInstruction sub = new MIPSInstruction(MIPSOp.SUB, destReg, destReg, sourceTwoReg);
+    public List<MIPSInstruction> createSub(Register destReg, Imm valOne, Register sourceTwoReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, "", destReg, zeroReg, valOne);
+        MIPSInstruction sub = new MIPSInstruction(MIPSOp.SUB, "", destReg, destReg, sourceTwoReg);
         returnList.add(add);
         returnList.add(sub);
         return returnList;
@@ -80,76 +85,76 @@ public class InstructionCreator {
     
 
     // I Type 
-    public List<IRInstruction> createSub(Register destReg, Imm valOne, Imm valTwo) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, destReg, zeroReg, valOne);
-        MIPSInstruction sub = new MIPSInstruction(MIPSOp.ADDI, destReg, destReg, valTwo);
+    public List<MIPSInstruction> createSub(Register destReg, Imm valOne, Imm valTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, "", destReg, zeroReg, valOne);
+        MIPSInstruction sub = new MIPSInstruction(MIPSOp.ADDI, "", destReg, destReg, valTwo);
         returnList.add(add);
         returnList.add(sub);
         return returnList;
     }
 
     // R Type
-    // TODO: figure out if multiplications can have immediates in tiger!
-    public List<IRInstruction> createMult(Register destReg, Register sourceOneReg, Register sourceTwoReg) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction mult = new MIPSInstruction(MIPSOp.MULT, destReg, sourceOneReg, sourceTwoReg);
+    public List<MIPSInstruction> createMult(Register destReg, Register sourceOneReg, Register sourceTwoReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction mult = new MIPSInstruction(MIPSOp.MUL, "", destReg, sourceOneReg, sourceTwoReg);
         returnList.add(mult);
         return returnList;
     }
 
     // I Type
-    public List<IRInstruction> createMult(Register destReg, Register sourceOneReg, Imm valTwo) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, destReg, zeroReg, valTwo);
-        MIPSInstruction mult = new MIPSInstruction(MIPSOp.MULT, destReg, destReg, sourceOneReg);
+    public List<MIPSInstruction> createMult(Register destReg, Register sourceOneReg, Imm valTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, "", destReg, zeroReg, valTwo);
+        MIPSInstruction mult = new MIPSInstruction(MIPSOp.MUL, "", destReg, destReg, sourceOneReg);
         returnList.add(mult);
         return returnList;
     }
 
     // I Type 
-    public List<IRInstruction> createMult(Register destReg, Imm valOne, Imm valTwo) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction addFirst = new MIPSInstruction(MIPSOp.ADDI, destReg, zeroReg, valOne);
-        MIPSInstruction addSecond = new MIPSInstruction(MIPSOp.ADDI, tempReg, zeroReg, valTwo);
-        MIPSInstruction mult = new MIPSInstruction(MIPSOp.MULT, destReg, destReg, tempReg);
+    public List<MIPSInstruction> createMult(Register destReg, Imm valOne, Imm valTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction addFirst = new MIPSInstruction(MIPSOp.ADDI, "", destReg, zeroReg, valOne);
+        MIPSInstruction addSecond = new MIPSInstruction(MIPSOp.ADDI, "", tempReg, zeroReg, valTwo);
+        MIPSInstruction mult = new MIPSInstruction(MIPSOp.MUL, "", destReg, destReg, tempReg);
         returnList.add(mult);
+        return returnList;
     }
     
     // R Type
-    public List<IRInstruction> createDiv(Register destReg, Register sourceOneReg, Register sourceTwoReg) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction div = new MIPSInstruction(MIPSOp.DIV, destReg, sourceOneReg, sourceTwoReg);
+    public List<MIPSInstruction> createDiv(Register destReg, Register sourceOneReg, Register sourceTwoReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction div = new MIPSInstruction(MIPSOp.DIV, "", destReg, sourceOneReg, sourceTwoReg);
         returnList.add(div);
         return returnList;
     }
 
     // I Type
-    public List<IRInstruction> createDiv(Register destReg, Register sourceOneReg, Imm valTwo) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, destReg, zeroReg, valTwo); 
-        MIPSInstruction div = new MIPSInstruction(MIPSOp.DIV, destReg, sourceOneReg, destReg);
+    public List<MIPSInstruction> createDiv(Register destReg, Register sourceOneReg, Imm valTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, "", destReg, zeroReg, valTwo); 
+        MIPSInstruction div = new MIPSInstruction(MIPSOp.DIV, "", destReg, sourceOneReg, destReg);
         returnList.add(add);
         returnList.add(div);
         return returnList;
     }
 
     // I Type
-    public List<IRInstruction> createDiv(Register destReg, Imm valOne , Register sourceTwoReg) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, destReg, zeroReg, valOne)
-        MIPSInstruction div = new MIPSInstruction(MIPSOp.DIV, destReg, destReg, sourceTwoReg);
+    public List<MIPSInstruction> createDiv(Register destReg, Imm valOne , Register sourceTwoReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, "", destReg, zeroReg, valOne);
+        MIPSInstruction div = new MIPSInstruction(MIPSOp.DIV, "", destReg, destReg, sourceTwoReg);
         returnList.add(add);
         returnList.add(div);
         return returnList;
     }
 
     // I Type
-    public List<IRInstruction> createDiv(Register destReg, Imm valOne, Imm valTwo) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction addFirst = new MIPSInstruction(MIPSOp.ADDI, destReg, zeroReg, valOne);
-        MIPSInstruction addSecond = new MIPSInstruction(MIPSOp.ADDI, tempReg, zeroReg, valTwo);
-        MIPSInstruction div = new MIPSInstruction(MIPSOp.DIV, destReg, destReg, tempReg);
+    public List<MIPSInstruction> createDiv(Register destReg, Imm valOne, Imm valTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction addFirst = new MIPSInstruction(MIPSOp.ADDI, "", destReg, zeroReg, valOne);
+        MIPSInstruction addSecond = new MIPSInstruction(MIPSOp.ADDI, "", tempReg, zeroReg, valTwo);
+        MIPSInstruction div = new MIPSInstruction(MIPSOp.DIV, "", destReg, destReg, tempReg);
         returnList.add(addFirst);
         returnList.add(addSecond);
         returnList.add(div);
@@ -157,52 +162,52 @@ public class InstructionCreator {
     }
 
     // R Type
-    public List<IRInstruction> createAnd(Register destReg, Register sourceOneReg, Register sourceTwoReg) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction and = new MIPSInstruction(MIPSOp.AND, destReg, sourceOneReg, sourceTwoReg);
+    public List<MIPSInstruction> createAnd(Register destReg, Register sourceOneReg, Register sourceTwoReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction and = new MIPSInstruction(MIPSOp.AND, "", destReg, sourceOneReg, sourceTwoReg);
         returnList.add(and);
         return returnList;
     }
     
     // I Type
-    public List<IRInstruction> createAnd(Register destReg, Register sourceOneReg, Imm valTwo) {
-        List<IRInstruction> returnList = new LinkedList<();
-        mipsInstruction and = new MIPSInstruction(MIPSOp.ANDI, destReg, sourceOneReg, valTwo);
+    public List<MIPSInstruction> createAnd(Register destReg, Register sourceOneReg, Imm valTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction and = new MIPSInstruction(MIPSOp.ANDI, "", destReg, sourceOneReg, valTwo);
         returnList.add(and);
         return returnList;
     }
 
     // I Type
-    public List<IRInstruction> createAnd(Register destReg, Imm valOne, Imm valTwo) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, destReg, zeroReg, valTwo);
-        MIPSInstruction and = new MIPSInstruction(MIPSOp.ANDI, destReg, destReg, valTwo);
+    public List<MIPSInstruction> createAnd(Register destReg, Imm valOne, Imm valTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, "", destReg, zeroReg, valTwo);
+        MIPSInstruction and = new MIPSInstruction(MIPSOp.ANDI, "", destReg, destReg, valTwo);
         returnList.add(add);
         returnList.add(and);
         return returnList;
     }
 
     // R Type
-    public List<IRInstruction> createOr(Register destReg, Register sourceOneReg, Register sourceTwoReg) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction or = new MIPSInstruction(MIPSOp.OR, destReg, sourceOneReg, sourceTwoReg);
-        returnList.add(or)
-        return returnList;
-    }
-
-    // I Type
-    public List<IRInstruction> createOr(Register destReg, Register sourceOneReg, Imm valTwo) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction or = new MIPSInstruction(MIPSOp.ORI destReg, sourceOneReg, valTwo);
+    public List<MIPSInstruction> createOr(Register destReg, Register sourceOneReg, Register sourceTwoReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction or = new MIPSInstruction(MIPSOp.OR, "", destReg, sourceOneReg, sourceTwoReg);
         returnList.add(or);
         return returnList;
     }
 
     // I Type
-    public List<IRInstruction> createOr(Register destReg, Imm valOne, Imm valTwo) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, destReg, zeroReg, valOne);
-        MIPSInstruction or = new MIPSInstruction(MIPSOp.ORI, destReg, destReg, valTwo);
+    public List<MIPSInstruction> createOr(Register destReg, Register sourceOneReg, Imm valTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction or = new MIPSInstruction(MIPSOp.ORI, "", destReg, sourceOneReg, valTwo);
+        returnList.add(or);
+        return returnList;
+    }
+
+    // I Type
+    public List<MIPSInstruction> createOr(Register destReg, Imm valOne, Imm valTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, "", destReg, zeroReg, valOne);
+        MIPSInstruction or = new MIPSInstruction(MIPSOp.ORI, "", destReg, destReg, valTwo);
         returnList.add(add);
         returnList.add(or);
         return returnList;
@@ -210,96 +215,187 @@ public class InstructionCreator {
 
     // BRANCH OPERATIONS
 
-    public List<IRInstruction> createLabel(String labelName) {
+    public List<MIPSInstruction> createLabel(String labelName) {
         // MIPS doesn't have a label instruction so we spoof one with a no-op
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction label = new MIPSInstruction(MIPSOp.ADD,labelName, zeroReg, zeroReg, zeroReg);
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction label = new MIPSInstruction(MIPSOp.ADD, labelName, zeroReg, zeroReg, zeroReg);
         returnList.add(label);
         return returnList;
     }
 
-    public List<IRInstruction> createJump(Addr address) {
-        List<IRInstruction> returnList = new LinkedList<();
+    public List<MIPSInstruction> createJump(Addr address) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
         MIPSInstruction jump = new MIPSInstruction(MIPSOp.J, "", address);
         returnList.add(jump);
         return returnList;
     }
 
-    public List<IRInstruction> createLinkedJump(Addr address) {
-        List<IRInstruction> returnList = new LinkedList<();
+    public List<MIPSInstruction> createLinkedJump(Addr address) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
         MIPSInstruction linkedJump = new MIPSInstruction(MIPSOp.JAL, "", address);
         returnList.add(linkedJump);
         return returnList;
     }
 
-    public List<IRInstruction> createJumpReturn() {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction returnJump = new MIPSInstruction(MIPSOp.JR, "", address);
+    public List<MIPSInstruction> createJumpReturn() {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction returnJump = new MIPSInstruction(MIPSOp.JR, "");
         returnList.add(returnJump);
         return returnList;
     }
 
-    public List<IRInstruction> createBRNEQ(Addr address, Register sourceOneReg, Register sourceTwoReg) {
-        List<IRInstruction> returnList = new LinkedList<();
+    public List<MIPSInstruction> createBRNEQ(Addr address, Register sourceOneReg, Register sourceTwoReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
         MIPSInstruction branch = new MIPSInstruction(MIPSOp.BNE, "", sourceOneReg, sourceTwoReg);
-        returnList.add(branch)
+        returnList.add(branch);
+        return returnList;
+    }
+    
+    public List<MIPSInstruction> createBRNEQ(Addr address, Register sourceOneReg, Imm immValTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        returnList.addAll(createAdd(tempReg, zeroReg, immValTwo));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BNE, "", sourceOneReg, tempReg);
+        returnList.add(branch);
         return returnList;
     }
 
-    public List<IRInstruction> createBREQ(Addr address, Register sourceOneReg, Register sourceTwoReg) {
-        List<IRInstruction> returnList = new LinkedList<();
+    public List<MIPSInstruction> createBREQ(Addr address, Register sourceOneReg, Register sourceTwoReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
         MIPSInstruction branch = new MIPSInstruction(MIPSOp.BEQ, "", sourceOneReg, sourceTwoReg);
         returnList.add(branch);
         return returnList;
     }
 
-    public List<IRInstruction> createBRLT(Addr address, Register sourceOneReg, Register sourceTwoReg) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLT, "". sourceOneReg, sourceTwoReg);
+    public List<MIPSInstruction> createBREQ(Addr address, Register sourceOneReg, Imm immValTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        returnList.addAll(createAdd(tempReg, zeroReg, immValTwo));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BEQ, "", sourceOneReg, tempReg);
         returnList.add(branch);
         return returnList;
     }
 
-    public List<IRInstruction> createBRGT(Addr address, Register sourceOneReg, Register sourceTwoReg) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGT, "" sourceOneReg, sourceTwoReg);
+    public List<MIPSInstruction> createBRLT(Addr address, Register sourceOneReg, Register sourceTwoReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLT, "", sourceOneReg, sourceTwoReg);
         returnList.add(branch);
         return returnList;
     }
 
-    public List<IRInstruction> createBRGEQ(Addr address, Register sourceOneReg, Register sourceTwoReg) {
-        List<IRInstruction> returnList = new LinkedList<();
+    public List<MIPSInstruction> createBRLT(Addr address, Register sourceOneReg, Imm immValTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        returnList.addAll(createAdd(tempReg, zeroReg, immValTwo));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLT, "", sourceOneReg, tempReg);
+        returnList.add(branch);
+        return returnList;
+    }
+
+
+
+
+    public List<MIPSInstruction> createBRLT(Addr address, Imm immValOne, Register sourceTwoReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        returnList.addAll(createAdd(tempReg, zeroReg, immValOne));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLT, "", tempReg, sourceTwoReg);
+        returnList.add(branch);
+        return returnList;
+    }
+
+
+    public List<MIPSInstruction> createBRGT(Addr address, Register sourceOneReg, Register sourceTwoReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGT, "", sourceOneReg, sourceTwoReg);
+        returnList.add(branch);
+        return returnList;
+    }
+
+    public List<MIPSInstruction> createBRGT(Addr address, Register sourceOneReg, Imm immValTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        returnList.addAll(createAdd(tempReg, zeroReg, immValTwo));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGT, "", sourceOneReg, tempReg);
+        returnList.add(branch);
+        return returnList;
+    }
+
+    public List<MIPSInstruction> createBRGT(Addr address, Imm immValOne, Register sourceTwoReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        returnList.addAll(createAdd(tempReg, zeroReg, immValOne));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGT, "", tempReg, sourceTwoReg);
+        returnList.add(branch);
+        return returnList;
+    }
+
+    public List<MIPSInstruction> createBRGEQ(Addr address, Register sourceOneReg, Register sourceTwoReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
         MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGE, "", sourceOneReg, sourceTwoReg);
         returnList.add(branch);
         return returnList;
     }
 
-    public List<IRInstruction> createReturn(Register destReg, Register sourceReg) {
-        List<IRInstruction> returnList = new LinkedList<();
-        MIPSInstruction move = createMove(destReg, sourceReg);
-        MIPSInstruction returnJump = createJumpReturn();
-        returnList.add(move);
-        returnList.add(returnJump);
+    public List<MIPSInstruction> createBRGEQ(Addr address, Register sourceOneReg, Imm immValTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        returnList.addAll(createAdd(tempReg, zeroReg, immValTwo));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGE, "", sourceOneReg, tempReg);
+        returnList.add(branch);
         return returnList;
     }
 
-    public List<IRInstruction> createArray(Register arrayPtrReg, Imm arraySize) {
-        List<IRInstruction> returnInstructions = new LinkedList<>();
-        // store syscall num in return register 
-        Imm sysCallNum = new Imm("DEC", SbrkSyscallNum);
-        returnInstructions.addAll(createAdd(returnReg, zeroReg, sysCallNum));
-        // move array size into argument register
-        returnInstructions.addAll(createAdd(argumentRegister, zeroReg, arraySize));
-        // call sbrk 
-        MIPSInstruction sbrk = new MIPSInstruction(MIPSOp.SYSCALL, "");
-        returnInstructions.add(sbrk);
-        // move pointer to arrayPtr register
-        returnInstructions.addAll(createMove(arrayPtrReg, returnReg));
-        return returnInstructions;
+    public List<MIPSInstruction> createBRGEQ(Addr address, Imm immValOne, Register sourceTwoReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        returnList.addAll(createAdd(tempReg, zeroReg, immValOne));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGE, "", tempReg, sourceTwoReg);
+        returnList.add(branch);
+        return returnList;
     }
 
-    public List<IRInstruction> createArrayLoad(Register arrayStoreReg, Register arrayPtrReg, Imm offsetImm) {
-        List<IRInstruction> returnInstructions = new LinkedList<>();
+    public List<MIPSInstruction> createBRLEQ (Addr address, Register sourceRegOne, Register sourceRegTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLE, "", sourceRegOne, sourceRegTwo);
+        returnList.add(branch);
+        return returnList;
+
+    }
+
+    public List<MIPSInstruction> createBRLEQ (Addr address, Register sourceRegOne, Imm immValTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        returnList.addAll(createAdd(tempReg, zeroReg, immValTwo));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLE, "", sourceRegOne, tempReg);
+        returnList.add(branch);
+        return returnList;
+    }
+
+    public List<MIPSInstruction> createBRLEQ (Addr address, Imm immValOne, Register sourceRegTwo) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        returnList.addAll(createAdd(tempReg, zeroReg, immValOne));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLE, "", tempReg, sourceRegTwo);
+        returnList.add(branch);
+        return returnList;
+    }
+
+
+    public List<MIPSInstruction> createReturn(Register destReg, Register sourceReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        returnList.addAll(createMove(destReg, sourceReg));
+        returnList.addAll(createJumpReturn());
+        return returnList;
+    }
+
+    public List<MIPSInstruction> createArray(Imm arraySize, Register arrayPtrReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        // store syscall num in return register 
+        Imm sysCallNum = new Imm("DEC", SbrkSyscallNum);
+        returnList.addAll(createAdd(returnReg, zeroReg, sysCallNum));
+        // move array size into argument register
+        returnList.addAll(createAdd(argsReg, zeroReg, arraySize));
+        // call sbrk 
+        MIPSInstruction sbrk = new MIPSInstruction(MIPSOp.SYSCALL, "");
+        returnList.add(sbrk);
+        // move pointer to arrayPtr register
+        returnList.addAll(createMove(arrayPtrReg, returnReg));
+        return returnList;
+    }
+
+    public List<MIPSInstruction> createArrayLoad(Register arrayStoreReg, Register arrayPtrReg, Imm offsetImm) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
         // store offset in assembler temporary
         returnList.addAll(createAdd(tempReg, zeroReg, offsetImm));
         // left shift  to account for number of bytes in int
@@ -313,8 +409,8 @@ public class InstructionCreator {
         return returnList;
     }
 
-    public List<IRInstruction> createArrayLoad(Register arrayStoreReg, Register arrayPtrReg, Register offsetReg) {
-        List<IRInstruction> returnInstructions = new LinkedList<>();
+    public List<MIPSInstruction> createArrayLoad(Register arrayStoreReg, Register arrayPtrReg, Register offsetReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
         //store offset in assembler temporary
         returnList.addAll(createMove(tempReg, offsetReg));
         // left shift to account for number of bytes in int
@@ -327,8 +423,8 @@ public class InstructionCreator {
         return returnList;
     }
 
-    public List<IRInstruction> createArrayStore(Register arrayStoreReg, Register arrayPtrReg, Imm offsetImm) {
-        List<IRInstruction> returnInstructions = new LinkedList<>();
+    public List<MIPSInstruction> createArrayStore(Register arrayStoreReg, Register arrayPtrReg, Imm offsetImm) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
         // store offset in assembler temporary
         returnList.addAll(createAdd(tempReg, zeroReg, offsetImm));
         // left shift  to account for number of bytes in int
@@ -342,8 +438,8 @@ public class InstructionCreator {
         return returnList;
     }
 
-    public List<IRInstruction> createArrayStore(Register arrayStoreReg, Register arrayPtrReg, Register offsetReg) {
-        List<IRInstruction> returnInstructions = new LinkedList<>();
+    public List<MIPSInstruction> createArrayStore(Register arrayStoreReg, Register arrayPtrReg, Register offsetReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
         //store offset in assembler temporary
         returnList.addAll(createMove(tempReg, offsetReg));
         // left shift to account for number of bytes in int
@@ -351,8 +447,91 @@ public class InstructionCreator {
         MIPSInstruction sll = new MIPSInstruction(MIPSOp.SLL, "", tempReg, tempReg, shiftImm);
         // add address of array to assembler temporary
         returnList.addAll(createAdd(tempReg, tempReg, arrayPtrReg));
-        mipsInstruction arrayStore - new MIPSInstruction(MIPSOp.SW, "", arrayStoreReg, tempReg);
+        MIPSInstruction arrayStore = new MIPSInstruction(MIPSOp.SW, "", arrayStoreReg, tempReg);
         returnList.add(arrayStore);
         return returnList;
     }
+
+    public List<MIPSInstruction> createPUTI(Register printReg) {
+        // store syscall number in return register
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        Imm syscallNum = new Imm("DEC", printIntSyscallNum);
+        returnList.addAll(createAdd(returnReg, zeroReg, syscallNum));
+        // store integer to print in argReg
+        returnList.addAll(createMove(argsReg, printReg));
+        // make syscall
+        MIPSInstruction puti = new MIPSInstruction(MIPSOp.SYSCALL, "");
+        returnList.add(puti);
+        return returnList;
+
+    }
+
+    public List<MIPSInstruction> createPUTI(Imm printVal) {
+                // store syscall number in return register
+                List<MIPSInstruction> returnList = new LinkedList<>();
+                Imm syscallNum = new Imm("DEC", printIntSyscallNum);
+                returnList.addAll(createAdd(returnReg, zeroReg, syscallNum));
+                // store integer to print in argReg
+                returnList.addAll(createAdd(argsReg, zeroReg, printVal));
+                // make syscall
+                MIPSInstruction puti = new MIPSInstruction(MIPSOp.SYSCALL, "");
+                returnList.add(puti);
+                return returnList;
+        
+    }
+
+
+    public List<MIPSInstruction> createPUTC(Register printReg) {
+                // store syscall number in return register
+                List<MIPSInstruction> returnList = new LinkedList<>();
+                Imm syscallNum = new Imm("DEC", printCharSyscallNum);
+                returnList.addAll(createAdd(returnReg, zeroReg, syscallNum));
+                // store char to print in argReg
+                returnList.addAll(createMove(argsReg, printReg));
+                // make syscall
+                MIPSInstruction putc = new MIPSInstruction(MIPSOp.SYSCALL, "");
+                returnList.add(putc);
+                return returnList;
+    }
+
+    public List<MIPSInstruction> createPUTC(Imm printVal) {
+                // store syscall number in return register
+                List<MIPSInstruction> returnList = new LinkedList<>();
+                Imm syscallNum = new Imm("DEC", printCharSyscallNum);
+                returnList.addAll(createAdd(returnReg, zeroReg, syscallNum));
+                // store char to print in argReg
+                returnList.addAll(createAdd(argsReg, zeroReg, printVal));
+                // make syscall
+                MIPSInstruction putc = new MIPSInstruction(MIPSOp.SYSCALL, "");
+                returnList.add(putc);
+                return returnList;
+    }
+
+    public List<MIPSInstruction> createGETI(Register destReg) {
+        // store syscall number in return register
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        Imm syscallNum = new Imm("DEC", getIntSyscallNum);
+        returnList.addAll(createAdd(returnReg, zeroReg, syscallNum));
+        // make syscall
+        MIPSInstruction geti = new MIPSInstruction(MIPSOp.SYSCALL, "");
+        returnList.add(geti);
+        // move returned integer into destination
+        returnList.addAll(createMove(destReg, returnReg));
+        return returnList;
+    }
+
+
+    public List<MIPSInstruction> createGETC(Register destReg) {
+        // store syscall number in return register
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        Imm syscallNum = new Imm("DEC", getCharSyscallNum);
+        returnList.addAll(createAdd(returnReg, zeroReg, syscallNum));
+        // make syscall
+        MIPSInstruction getc = new MIPSInstruction(MIPSOp.SYSCALL, "");
+        returnList.add(getc);
+        // move returned integer into destination
+        returnList.addAll(createMove(destReg, returnReg));
+        return returnList;
+    }
+
 }
