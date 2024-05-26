@@ -3,53 +3,62 @@ package converter;
 import compiler.*;
 import ir.*;
 import isa.mips.*;
+import java.util.*;
 
-import java.util.Map;
-import java.util.List;
-import java.util.function.Consumer;
+public class MIPSConverter {
+    private static final String[] caller_saved_regs = {
+//      "v0", "v1", "a0", "a1", "a2", "a3",
+        "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9"
+    };
 
-public class MIPSConverter extends ISAConverter {
-    @Override
-    public synchronized void convert(IRProgram prog) {
-        registerMapping = new java.util.HashMap<>();
-        try {
-            for(IRFunction fnc : prog.functions) {
-                FunctionContext ctx = new FunctionContext(fnc);
-                ctx.optimize();
+    private static final String[] callee_saved_regs = {
+        "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7"
+    };
+
+    public static List<MIPSInstruction> convert(List<MIPSInstruction> list, Map<MIPSInstruction, Set<Register>> criticals) {
+        Map<Register, Register> registerAllocations = new HashMap<>();
+        List<MIPSInstruction> out = new ArrayList<MIPSInstruction>();
+
+        for(Iterator<MIPSInstruction> inst : list) {
+            Set<Register> current_crits = new HashSet<>(criticals.get(inst));
+            if(current_crits.size() > caller_saved_regs.length) {
+                throw RuntimeException("HELP"); // TODO implement spills
             }
-        } catch(IRException e) {
-            throw new RuntimeException(e);
+
+            for(int i = 0; i < inst.operands.size(); i++) {
+                if(!(inst.operands.get(i) instanceof Register)) continue;
+                Register reg = (Register) inst.operands.get(i);
+
+                for(Map.Entry<Register,Register> e : registerAllocations.entrySet()) {
+                    if(reg.equals(e.getValue())) {
+                        inst.operands.set(0, e.getKey());
+                        break;
+                    }
+                }
+            }
+
+            for(Register val : current_crits.removeAll(registerAllocations.valueSet())) {
+                for(int i = 0; i < caller_saved_regs.length; i++) {
+                    if(registerAllocations.get(caller_saved_regs[i]) == null) {
+                        registerAllocations.put(caller_saved_regs[i], val);
+                        break;
+                    }
+                }
+            }
+
+            for(int i = 0; i < inst.operands.size(); i++) {
+                if(!(inst.operands.get(i) instanceof Register)) continue;
+                Register reg = (Register) inst.operands.get(i);
+
+                for(Map.Entry<Register,Register> e : registerAllocations.entrySet()) {
+                    if(reg.equals(e.getValue())) {
+                        inst.operands.set(0, e.getKey());
+                        break;
+                    }
+                }
+            }
         }
-    }
 
-    private final Map<IRInstruction.OpCode, Consumer<IRInstruction>> converter = new java.util.HashMap<>();
-    public MIPSConverter() {
-        converter.put(IRInstruction.OpCode.ASSIGN, this::assign);
-    }
-
-    private Map<String,Object> registerMapping;
-
-    private String getMapped(Object o) {
-        for(Map.Entry<String,Object> e : registerMapping.entrySet()) {
-            if(o.equals(e.getValue())) return e.getKey();
-        }
-        return null;
-    }
-
-    private static final String[] regs = { "$0", "$at", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3",
-        "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7",
-        "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1",
-        "$gp", "$sp", "$fp", "$ra" };
-
-    private static String allocateIRegister(Object value) {
-        return null;
-    }
-
-    private static String allocateFPRegister(Object value) {
-        return null;
-    }
-
-    private void assign(IRInstruction inst) {
-        
+        return out;
     }
 }
