@@ -327,11 +327,13 @@ public class InstructionConverter {
     private List<MIPSInstruction> convertIType(IRInstruction instruction) {
         Imm valOne = null;
         Imm valTwo = null;
+        System.out.println("operand 0 = " + instruction.operands[0].toString());
+        System.out.println("operand 1 = " + instruction.operands[1].toString());
         Register destReg = variableToRegister(instruction.operands[0]);
         Register regOne = funcMap.get(instruction.operands[1].toString());
         if(instruction.operands.length == 2) { // if only two operands exist must be an assign
             valOne = createImmediate(instruction.operands[1]);
-            return mipsCreator.createAdd(destReg, regOne, valOne);
+            return mipsCreator.createAdd(destReg, destReg, valOne);
         }
         Register regTwo = funcMap.get(instruction.operands[2].toString());
         if(regOne == null) {
@@ -502,10 +504,13 @@ public class InstructionConverter {
         Register newReg;
         if(funcMap.get(operand.toString()) == null) {
             newReg = new Register(getEmptyRegister());
-            funcMap.put(operand.toString(), returnReg);
+            System.out.println("assigning register " + newReg.toString() + " to variable " + operand.toString());
+            funcMap.put(operand.toString(), newReg);
         } else {
             newReg = funcMap.get(operand.toString());
+            System.out.println("grabbed register " + newReg.toString() + " allocated to variable " + operand.toString());
         }
+
         return newReg;
     }
 

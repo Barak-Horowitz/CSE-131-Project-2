@@ -1,5 +1,7 @@
 #!/bin/bash
 
+java -cp build MipsCompiler ${@}
+
 # Write a script to run your backend
 # This script must take exactly one terminal argument:
 # a path to an input IR file. It should also take one

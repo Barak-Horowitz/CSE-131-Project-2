@@ -20,7 +20,12 @@ public class ProgramConverter {
     }
 
     public MIPSProgram convertIRProg() {
+        System.out.println("CONVERTING INSTRUCTIONS");
         convertInstructions();
+        System.out.println("CONVERTED INSTRUCTIONS");
+        System.out.println("PRINTING INSTRUCTIONS");
+        printInstructions();
+        System.out.println("PRINTED ALL INSTRUCTIONS");
         convertRegisters();
         return null;
     }
@@ -58,5 +63,11 @@ public class ProgramConverter {
     
     private void convertRegisters() {
         return;
+    }
+
+    private void printInstructions() {
+        for(MIPSInstruction instruction : instructionSet.values()) {
+            System.out.println(instruction);
+        }
     }
 }
