@@ -281,7 +281,7 @@ public class InstructionCreator {
 
     public List<MIPSInstruction> createBRLT(Addr address, Register sourceOneReg, Register sourceTwoReg) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        returnList.add(createSub(tempReg, sourceOneReg, sourceTwoReg))
+        returnList.addAll(createSub(tempReg, sourceOneReg, sourceTwoReg));
         MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLT, "", tempReg, address);
         returnList.add(branch);
         return returnList;
@@ -357,7 +357,7 @@ public class InstructionCreator {
 
     public List<MIPSInstruction> createBRLEQ (Addr address, Register sourceRegOne, Register sourceRegTwo) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        returnList.addAll(createSub(tempReg, sourceRegOne, sourceRegTwo))
+        returnList.addAll(createSub(tempReg, sourceRegOne, sourceRegTwo));
         MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLE, "", tempReg, address);
         returnList.add(branch);
         return returnList;
@@ -373,7 +373,7 @@ public class InstructionCreator {
 
     public List<MIPSInstruction> createBRLEQ (Addr address, Imm immValOne, Register sourceRegTwo) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        returnList.addAll(createSuv(tempReg, immValOne, sourceRegTwo));
+        returnList.addAll(createSub(tempReg, immValOne, sourceRegTwo));
         MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLE, "", tempReg, address);
         returnList.add(branch);
         return returnList;
