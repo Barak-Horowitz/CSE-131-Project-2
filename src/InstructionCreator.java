@@ -251,7 +251,7 @@ public class InstructionCreator {
 
     public List<MIPSInstruction> createBRNEQ(Addr address, Register sourceOneReg, Register sourceTwoReg) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BNE, "", sourceOneReg, sourceTwoReg);
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BNE, "", sourceOneReg, sourceTwoReg, address);
         returnList.add(branch);
         return returnList;
     }
@@ -259,14 +259,14 @@ public class InstructionCreator {
     public List<MIPSInstruction> createBRNEQ(Addr address, Register sourceOneReg, Imm immValTwo) {
         List<MIPSInstruction> returnList = new LinkedList<>();
         returnList.addAll(createAdd(tempReg, zeroReg, immValTwo));
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BNE, "", sourceOneReg, tempReg);
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BNE, "", sourceOneReg, tempReg, address);
         returnList.add(branch);
         return returnList;
     }
 
     public List<MIPSInstruction> createBREQ(Addr address, Register sourceOneReg, Register sourceTwoReg) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BEQ, "", sourceOneReg, sourceTwoReg);
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BEQ, "", sourceOneReg, sourceTwoReg, address);
         returnList.add(branch);
         return returnList;
     }
@@ -274,22 +274,23 @@ public class InstructionCreator {
     public List<MIPSInstruction> createBREQ(Addr address, Register sourceOneReg, Imm immValTwo) {
         List<MIPSInstruction> returnList = new LinkedList<>();
         returnList.addAll(createAdd(tempReg, zeroReg, immValTwo));
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BEQ, "", sourceOneReg, tempReg);
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BEQ, "", sourceOneReg, tempReg, address);
         returnList.add(branch);
         return returnList;
     }
 
     public List<MIPSInstruction> createBRLT(Addr address, Register sourceOneReg, Register sourceTwoReg) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLT, "", sourceOneReg, sourceTwoReg);
+        returnList.add(createSub(tempReg, sourceOneReg, sourceTwoReg))
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLT, "", tempReg, address);
         returnList.add(branch);
         return returnList;
     }
 
     public List<MIPSInstruction> createBRLT(Addr address, Register sourceOneReg, Imm immValTwo) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        returnList.addAll(createAdd(tempReg, zeroReg, immValTwo));
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLT, "", sourceOneReg, tempReg);
+        returnList.addAll(createSub(tempReg, sourceOneReg, immValTwo));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLT, "", tempReg, address);
         returnList.add(branch);
         return returnList;
     }
@@ -299,8 +300,8 @@ public class InstructionCreator {
 
     public List<MIPSInstruction> createBRLT(Addr address, Imm immValOne, Register sourceTwoReg) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        returnList.addAll(createAdd(tempReg, zeroReg, immValOne));
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLT, "", tempReg, sourceTwoReg);
+        returnList.addAll(createSub(tempReg, immValOne, sourceTwoReg));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLT, "", tempReg, address);
         returnList.add(branch);
         return returnList;
     }
@@ -308,70 +309,72 @@ public class InstructionCreator {
 
     public List<MIPSInstruction> createBRGT(Addr address, Register sourceOneReg, Register sourceTwoReg) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGT, "", sourceOneReg, sourceTwoReg);
+        returnList.addAll(createSub(tempReg, sourceOneReg, sourceTwoReg));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGT, "", tempReg, address);
         returnList.add(branch);
         return returnList;
     }
 
     public List<MIPSInstruction> createBRGT(Addr address, Register sourceOneReg, Imm immValTwo) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        returnList.addAll(createAdd(tempReg, zeroReg, immValTwo));
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGT, "", sourceOneReg, tempReg);
+        returnList.addAll(createSub(tempReg, sourceOneReg, immValTwo));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGT, "", tempReg, address);
         returnList.add(branch);
         return returnList;
     }
 
     public List<MIPSInstruction> createBRGT(Addr address, Imm immValOne, Register sourceTwoReg) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        returnList.addAll(createAdd(tempReg, zeroReg, immValOne));
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGT, "", tempReg, sourceTwoReg);
+        returnList.addAll(createSub(tempReg, immValOne, sourceTwoReg));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGT, "", tempReg, address);
         returnList.add(branch);
         return returnList;
     }
 
     public List<MIPSInstruction> createBRGEQ(Addr address, Register sourceOneReg, Register sourceTwoReg) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGE, "", sourceOneReg, sourceTwoReg);
+        returnList.addAll(createSub(tempReg, sourceOneReg, sourceTwoReg));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGE, "", tempReg, address);
         returnList.add(branch);
         return returnList;
     }
 
     public List<MIPSInstruction> createBRGEQ(Addr address, Register sourceOneReg, Imm immValTwo) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        returnList.addAll(createAdd(tempReg, zeroReg, immValTwo));
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGE, "", sourceOneReg, tempReg);
+        returnList.addAll(createSub(tempReg, sourceOneReg, immValTwo));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGE, "", tempReg, address);
         returnList.add(branch);
         return returnList;
     }
 
     public List<MIPSInstruction> createBRGEQ(Addr address, Imm immValOne, Register sourceTwoReg) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        returnList.addAll(createAdd(tempReg, zeroReg, immValOne));
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGE, "", tempReg, sourceTwoReg);
+        returnList.addAll(createSub(tempReg, immValOne, sourceTwoReg));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGE, "", tempReg, address);
         returnList.add(branch);
         return returnList;
     }
 
     public List<MIPSInstruction> createBRLEQ (Addr address, Register sourceRegOne, Register sourceRegTwo) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLE, "", sourceRegOne, sourceRegTwo);
+        returnList.addAll(createSub(tempReg, sourceRegOne, sourceRegTwo))
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLE, "", tempReg, address);
         returnList.add(branch);
         return returnList;
-
     }
 
     public List<MIPSInstruction> createBRLEQ (Addr address, Register sourceRegOne, Imm immValTwo) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        returnList.addAll(createAdd(tempReg, zeroReg, immValTwo));
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLE, "", sourceRegOne, tempReg);
+        returnList.addAll(createSub(tempReg, sourceRegOne, immValTwo));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLE, "", tempReg, address);
         returnList.add(branch);
         return returnList;
     }
 
     public List<MIPSInstruction> createBRLEQ (Addr address, Imm immValOne, Register sourceRegTwo) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        returnList.addAll(createAdd(tempReg, zeroReg, immValOne));
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLE, "", tempReg, sourceRegTwo);
+        returnList.addAll(createSuv(tempReg, immValOne, sourceRegTwo));
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLE, "", tempReg, address);
         returnList.add(branch);
         return returnList;
     }
