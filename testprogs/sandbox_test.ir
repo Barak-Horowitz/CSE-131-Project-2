@@ -1,0 +1,7 @@
+#start_function
+void main():
+int-list: a[10], b, c, d, e
+float-list:
+    array_load b, a, 0
+    array_store b, a, 0
+#end_function

@@ -10,6 +10,7 @@ import main.java.mips.operand.*;
 public class ProgramConverter {
     private IRProgram IRProg;
     private HashMap<Integer, MIPSInstruction> instructionSet;
+    private LinkedList<MIPSInstruction> instructions;
 
     private final int PCCounterSize = 4;
 
@@ -17,6 +18,7 @@ public class ProgramConverter {
     public ProgramConverter(IRProgram IRProg) {
         this.IRProg = IRProg;
         instructionSet = new HashMap<>();
+        instructions = new LinkedList<>();
     }
 
     public MIPSProgram convertIRProg() {
@@ -40,6 +42,7 @@ public class ProgramConverter {
             
             for (MIPSInstruction mipsInstruction : headerInstruction) {
                 instructionSet.put(currIndex * PCCounterSize, mipsInstruction);
+                instructions.add(mipsInstruction);
                 currIndex ++;
             }
 
@@ -49,6 +52,7 @@ public class ProgramConverter {
                 // add all created mips instructions to MIPS instruction set, update indices
                 for (MIPSInstruction mipsInstruction : mipsInstructions) {        
                     instructionSet.put(currIndex * PCCounterSize, mipsInstruction);
+                    instructions.add(mipsInstruction);
                     currIndex ++;
                 }
 
@@ -66,7 +70,7 @@ public class ProgramConverter {
     }
 
     private void printInstructions() {
-        for(MIPSInstruction instruction : instructionSet.values()) {
+        for(MIPSInstruction instruction : instructions) {
             System.out.println(instruction);
         }
     }

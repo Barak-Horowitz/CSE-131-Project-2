@@ -333,7 +333,7 @@ public class InstructionConverter {
         Register regOne = funcMap.get(instruction.operands[1].toString());
         if(instruction.operands.length == 2) { // if only two operands exist must be an assign
             valOne = createImmediate(instruction.operands[1]);
-            return mipsCreator.createAdd(destReg, destReg, valOne);
+            return mipsCreator.createAdd(destReg, zeroReg, valOne);
         }
         Register regTwo = funcMap.get(instruction.operands[2].toString());
         if(regOne == null) {
@@ -369,6 +369,7 @@ public class InstructionConverter {
                 if(regOne == null && regTwo == null) {
                     return mipsCreator.createMult(destReg, valOne, valTwo);
                 } else if (regTwo == null) {
+                    System.out.println("IMMEDIATE STORED IN LAST OPERAND");
                     return mipsCreator.createMult(destReg, regOne, valTwo);
                 } else {
                     return mipsCreator.createMult(destReg, regTwo, valOne);

@@ -68,6 +68,7 @@ public class InstructionCreator {
     // I Type
     public List<MIPSInstruction> createSub(Register destReg, Register sourceOneReg, Imm valTwo) {
         List<MIPSInstruction> returnList = new LinkedList<>();
+        valTwo.val = (valTwo.getInt() * - 1 + "");
         MIPSInstruction sub = new MIPSInstruction(MIPSOp.ADDI, "", destReg, sourceOneReg, valTwo);
         returnList.add(sub);
         return returnList;
@@ -87,6 +88,7 @@ public class InstructionCreator {
     // I Type 
     public List<MIPSInstruction> createSub(Register destReg, Imm valOne, Imm valTwo) {
         List<MIPSInstruction> returnList = new LinkedList<>();
+        valTwo.val = (valTwo.getInt() * - 1 + "");
         MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, "", destReg, zeroReg, valOne);
         MIPSInstruction sub = new MIPSInstruction(MIPSOp.ADDI, "", destReg, destReg, valTwo);
         returnList.add(add);
@@ -107,6 +109,7 @@ public class InstructionCreator {
         List<MIPSInstruction> returnList = new LinkedList<>();
         MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, "", destReg, zeroReg, valTwo);
         MIPSInstruction mult = new MIPSInstruction(MIPSOp.MUL, "", destReg, destReg, sourceOneReg);
+        returnList.add(add);
         returnList.add(mult);
         return returnList;
     }
@@ -117,6 +120,8 @@ public class InstructionCreator {
         MIPSInstruction addFirst = new MIPSInstruction(MIPSOp.ADDI, "", destReg, zeroReg, valOne);
         MIPSInstruction addSecond = new MIPSInstruction(MIPSOp.ADDI, "", tempReg, zeroReg, valTwo);
         MIPSInstruction mult = new MIPSInstruction(MIPSOp.MUL, "", destReg, destReg, tempReg);
+        returnList.add(addFirst);
+        returnList.add(addSecond);
         returnList.add(mult);
         return returnList;
     }
@@ -382,7 +387,7 @@ public class InstructionCreator {
     public List<MIPSInstruction> createArray(Imm arraySize, Register arrayPtrReg) {
         List<MIPSInstruction> returnList = new LinkedList<>();
         // store syscall num in return register 
-        Imm sysCallNum = new Imm("DEC", SbrkSyscallNum);
+        Imm sysCallNum = new Imm(SbrkSyscallNum, "DEC");
         returnList.addAll(createAdd(returnReg, zeroReg, sysCallNum));
         // move array size into argument register
         returnList.addAll(createAdd(argsReg, zeroReg, arraySize));
@@ -399,7 +404,7 @@ public class InstructionCreator {
         // store offset in assembler temporary
         returnList.addAll(createAdd(tempReg, zeroReg, offsetImm));
         // left shift  to account for number of bytes in int
-        Imm shiftImm = new Imm("DEC", offsetShift);
+        Imm shiftImm = new Imm(offsetShift, "DEC");
         MIPSInstruction sll = new MIPSInstruction(MIPSOp.SLL,"", tempReg, tempReg, shiftImm);
         returnList.add(sll);
         // add address of array to assembler temporary 
@@ -414,7 +419,7 @@ public class InstructionCreator {
         //store offset in assembler temporary
         returnList.addAll(createMove(tempReg, offsetReg));
         // left shift to account for number of bytes in int
-        Imm shiftImm  = new Imm("DEC", offsetShift);
+        Imm shiftImm  = new Imm(offsetShift, "DEC");
         MIPSInstruction sll = new MIPSInstruction(MIPSOp.SLL, "", tempReg, tempReg, shiftImm);
         // add address of array to assembler temporary
         returnList.addAll(createAdd(tempReg, tempReg, arrayPtrReg));
@@ -428,7 +433,7 @@ public class InstructionCreator {
         // store offset in assembler temporary
         returnList.addAll(createAdd(tempReg, zeroReg, offsetImm));
         // left shift  to account for number of bytes in int
-        Imm shiftImm = new Imm("DEC", offsetShift);
+        Imm shiftImm = new Imm(offsetShift, "DEC");
         MIPSInstruction sll = new MIPSInstruction(MIPSOp.SLL,"", tempReg, tempReg, shiftImm);
         returnList.add(sll);
         // add address of array to assembler temporary 
@@ -443,7 +448,7 @@ public class InstructionCreator {
         //store offset in assembler temporary
         returnList.addAll(createMove(tempReg, offsetReg));
         // left shift to account for number of bytes in int
-        Imm shiftImm  = new Imm("DEC", offsetShift);
+        Imm shiftImm  = new Imm(offsetShift, "DEC");
         MIPSInstruction sll = new MIPSInstruction(MIPSOp.SLL, "", tempReg, tempReg, shiftImm);
         // add address of array to assembler temporary
         returnList.addAll(createAdd(tempReg, tempReg, arrayPtrReg));
@@ -455,7 +460,7 @@ public class InstructionCreator {
     public List<MIPSInstruction> createPUTI(Register printReg) {
         // store syscall number in return register
         List<MIPSInstruction> returnList = new LinkedList<>();
-        Imm syscallNum = new Imm("DEC", printIntSyscallNum);
+        Imm syscallNum = new Imm(printIntSyscallNum, "DEC");
         returnList.addAll(createAdd(returnReg, zeroReg, syscallNum));
         // store integer to print in argReg
         returnList.addAll(createMove(argsReg, printReg));
@@ -469,7 +474,7 @@ public class InstructionCreator {
     public List<MIPSInstruction> createPUTI(Imm printVal) {
                 // store syscall number in return register
                 List<MIPSInstruction> returnList = new LinkedList<>();
-                Imm syscallNum = new Imm("DEC", printIntSyscallNum);
+                Imm syscallNum = new Imm(printIntSyscallNum, "DEC");
                 returnList.addAll(createAdd(returnReg, zeroReg, syscallNum));
                 // store integer to print in argReg
                 returnList.addAll(createAdd(argsReg, zeroReg, printVal));
@@ -484,7 +489,7 @@ public class InstructionCreator {
     public List<MIPSInstruction> createPUTC(Register printReg) {
                 // store syscall number in return register
                 List<MIPSInstruction> returnList = new LinkedList<>();
-                Imm syscallNum = new Imm("DEC", printCharSyscallNum);
+                Imm syscallNum = new Imm(printCharSyscallNum, "DEC");
                 returnList.addAll(createAdd(returnReg, zeroReg, syscallNum));
                 // store char to print in argReg
                 returnList.addAll(createMove(argsReg, printReg));
@@ -497,7 +502,7 @@ public class InstructionCreator {
     public List<MIPSInstruction> createPUTC(Imm printVal) {
                 // store syscall number in return register
                 List<MIPSInstruction> returnList = new LinkedList<>();
-                Imm syscallNum = new Imm("DEC", printCharSyscallNum);
+                Imm syscallNum = new Imm(printCharSyscallNum, "DEC");
                 returnList.addAll(createAdd(returnReg, zeroReg, syscallNum));
                 // store char to print in argReg
                 returnList.addAll(createAdd(argsReg, zeroReg, printVal));
@@ -510,7 +515,7 @@ public class InstructionCreator {
     public List<MIPSInstruction> createGETI(Register destReg) {
         // store syscall number in return register
         List<MIPSInstruction> returnList = new LinkedList<>();
-        Imm syscallNum = new Imm("DEC", getIntSyscallNum);
+        Imm syscallNum = new Imm(getIntSyscallNum, "DEC");
         returnList.addAll(createAdd(returnReg, zeroReg, syscallNum));
         // make syscall
         MIPSInstruction geti = new MIPSInstruction(MIPSOp.SYSCALL, "");
@@ -524,7 +529,7 @@ public class InstructionCreator {
     public List<MIPSInstruction> createGETC(Register destReg) {
         // store syscall number in return register
         List<MIPSInstruction> returnList = new LinkedList<>();
-        Imm syscallNum = new Imm("DEC", getCharSyscallNum);
+        Imm syscallNum = new Imm(getCharSyscallNum, "DEC");
         returnList.addAll(createAdd(returnReg, zeroReg, syscallNum));
         // make syscall
         MIPSInstruction getc = new MIPSInstruction(MIPSOp.SYSCALL, "");

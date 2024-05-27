@@ -2,7 +2,7 @@ package main.java.mips.operand;
 
 public class Imm extends MIPSOperand {
 
-    private String val;
+    public String val;
     private String type;
 
     public Imm(String val, String type) {

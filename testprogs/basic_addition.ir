@@ -1,8 +1,0 @@
-#start_function
-void main():
-int-list: a, b, c, d, e
-float-list:
-    assign, a, 1
-    assign, b, 2
-    assign, c, b
-#end_function
