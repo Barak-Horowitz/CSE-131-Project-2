@@ -36,6 +36,11 @@ public class ProgramConverter {
         InstructionConverter instructionConverter = new InstructionConverter();
         int currIndex = 0;
 
+        // add all functions
+        for(IRFunction function : IRProg.functions) {
+            instructionConverter.addFunction(function);
+        }
+
         for(IRFunction function : IRProg.functions) {
             
             List<MIPSInstruction> headerInstruction = instructionConverter.convertHeader(function);
@@ -50,12 +55,14 @@ public class ProgramConverter {
             for(IRInstruction instruction : function.instructions) {
                 List<MIPSInstruction> mipsInstructions = instructionConverter.convertInstruction(instruction);
                 // add all created mips instructions to MIPS instruction set, update indices
-                for (MIPSInstruction mipsInstruction : mipsInstructions) {        
-                    instructionSet.put(currIndex * PCCounterSize, mipsInstruction);
-                    instructions.add(mipsInstruction);
-                    currIndex ++;
-                }
+                if(mipsInstructions != null) {
+                    for (MIPSInstruction mipsInstruction : mipsInstructions) {        
+                        instructionSet.put(currIndex * PCCounterSize, mipsInstruction);
+                        instructions.add(mipsInstruction);
+                        currIndex ++;
+                    }
 
+                }
             }
 
             // clear function map after finishing with function conversion

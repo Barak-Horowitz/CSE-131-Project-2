@@ -1,6 +1,6 @@
 #start_function
 void main():
-int-list: a[10], b, c, d, e
+int-list:
 float-list:
 START:
     goto, START

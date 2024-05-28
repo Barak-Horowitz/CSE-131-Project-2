@@ -71,7 +71,7 @@ public class MIPSInstruction {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        if (label != null) {
+        if (label != null && !label.equals("")) {
             builder.append(label + ": ");
         }
 
