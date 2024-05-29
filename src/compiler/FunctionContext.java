@@ -11,9 +11,9 @@ public class FunctionContext {
     public List<IRInstruction> allInstructions;
     public Map<String, BlockContext> labelLinks;
 
-    public Map<IRVariableOperand, Set<IRVariableOperand>> intersections = new HashMap<>();
+    public Map<IRInstruction, Set<IRVariableOperand>> critMap = new HashMap<>();
 
-    private IRFunction function;
+    public IRFunction function;
 
     public FunctionContext(IRFunction function) throws IRException {
         this.function = function;
@@ -24,7 +24,7 @@ public class FunctionContext {
 
         List<IRInstruction> instructions = new java.util.ArrayList<>();
         Collection<String> labels = new java.util.ArrayList<>();
-        labels.add(function.name);
+        // labels.add(function.name);
 
         for(IRInstruction inst : function.instructions) {
             if(inst.opCode == OpCode.LABEL) {
@@ -80,7 +80,7 @@ public class FunctionContext {
                     ctx.branches.add(jmp);
                 }
 
-                if((last.isBranch() || !last.isInternalJump()) && next != null) {
+                if((last.isBranch() || !last.isInternalJump())) {
                     ctx.branches.add(next);
                 }
             }
@@ -88,6 +88,7 @@ public class FunctionContext {
 
         for(BlockContext ctx : blocks) {
             for(BlockContext branch : ctx.branches) {
+                if(branch == null) continue;
                 branch.predecessors.add(ctx);
             }
         }
@@ -111,13 +112,8 @@ public class FunctionContext {
         while(!paths.isEmpty()) {
             FlowWalk walk = paths.remove();
             // System.out.println(walk);
-            criticals.get(walk.ctx).addAll(walk.walk());
+            criticals.get(walk.ctx).addAll(walk.walk(critMap));
             paths.addAll(walk.predecessors());
-
-            for(Map.Entry<IRVariableOperand,Set<IRVariableOperand>> e : walk.intersections.entrySet()) {
-                if(!intersections.containsKey(e.getKey())) intersections.put(e.getKey(), new java.util.HashSet<>());
-                intersections.get(e.getKey()).addAll(e.getValue());
-            }
         }
 
         for(BlockContext ctx : blocks) {

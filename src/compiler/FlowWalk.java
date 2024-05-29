@@ -11,8 +11,6 @@ public class FlowWalk {
     private Set<IRVariableOperand> criticalVars;
     public final BlockContext ctx;
 
-    public Map<IRVariableOperand, Set<IRVariableOperand>> intersections = new java.util.HashMap<>();
-
     public FlowWalk(BlockContext ctx) {
         this(ctx, null);
     }
@@ -28,7 +26,7 @@ public class FlowWalk {
         this.ctx = ctx;
     }
 
-    public Set<IRInstruction> walk() {
+    public Set<IRInstruction> walk(Map<IRInstruction, Set<IRVariableOperand>> critMap) {
         if(criticalInstructions != null) throw new IllegalStateException("Already walked");
 
         criticalInstructions = new HashSet<>();
@@ -57,11 +55,7 @@ public class FlowWalk {
                 criticalInstructions.add(inst);
             }
 
-            for(IRVariableOperand i : criticalVars) {
-                if(!intersections.containsKey(i)) intersections.put(i, new java.util.HashSet<>());
-                intersections.get(i).addAll(criticalVars);
-                intersections.get(i).remove(i);
-            }
+            critMap.put(inst, new HashSet<>(criticalVars));
         }
         return criticalInstructions;
     }

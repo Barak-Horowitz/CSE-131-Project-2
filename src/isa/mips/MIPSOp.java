@@ -3,7 +3,7 @@ package isa.mips;
 public enum MIPSOp {
     ADD, ADDI, SUB, MUL, DIV, AND, ANDI, OR, ORI, SLL, // bin ops
     LI, LW, MOVE, SW, LA, // data movement
-    BEQ, BNE, BLT, BGT, BGE, // branches
+    BEQ, BNE, BLT, BGT, BGE, BLE, // branches
     J, JAL, JR, // jumps
     SYSCALL,
     // single-precision fp arithmetic

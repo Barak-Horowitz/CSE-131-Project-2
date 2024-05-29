@@ -72,9 +72,10 @@ public class MIPSInstruction {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         if (label != null) {
-            builder.append(label + ": ");
+            builder.append(label + ":\n");
         }
 
+        builder.append("    ");
         builder.append(op.toString());
         if (operands.isEmpty()) {
             return builder.toString();

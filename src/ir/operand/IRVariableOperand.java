@@ -21,4 +21,9 @@ public class IRVariableOperand extends IROperand {
         if(!(o instanceof IRVariableOperand)) return false;
         return ((IRVariableOperand) o).getName().equals(getName());
     }
+
+    @Override
+    public int hashCode() {
+        return value.hashCode();
+    }
 }

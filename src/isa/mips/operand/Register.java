@@ -34,4 +34,9 @@ public class Register extends MIPSOperand {
             return false;
         }
     }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
 }

@@ -111,6 +111,8 @@ public class MIPSInterpreter {
             finished = true;
         }
 
+        System.out.println(program.instructions);
+
         String command;
         boolean go = false;
         String stopLabel = null;
