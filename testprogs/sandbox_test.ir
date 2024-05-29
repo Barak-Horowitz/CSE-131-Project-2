@@ -1,7 +1,12 @@
 #start_function
 void main():
-int-list:
+int-list: a, b, c, d, e, F[5]
 float-list:
-START:
-    goto, START
+assign, a, 1
+call func1
+assign, b, 2
 #end_function
+
+#start_function
+void func1():
+

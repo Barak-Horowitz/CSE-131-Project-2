@@ -7,56 +7,107 @@ import java.io.*;
 import main.java.mips.*;
 import main.java.mips.operand.*;
 
-
 public class InstructionConverter {
     private InstructionCreator mipsCreator;
-    private final String argsReg = "a";
-    private final String tempReg = "t";
-    private final Register zeroReg = new Register("0");
-    private final Register returnReg = new Register ("v0");
-    private int largestRegVal;
-    private ArrayList<HashMap<String, Register>> regMap;     // stores which variables have been allocated inside of a program
-    private ArrayList<HashMap<String, Integer>> arrayMap;    // stores which variables have already been allocated inside of a function
-    private HashMap<String, Register> funcMap;
-    private String functionName;
-    private HashSet<String> functions;
+    // ALLOCATED REGISTERS
+    private final String argsReg = "$a";
+    private final Register zeroReg = new Register("$0");
+    private final Register returnReg = new Register ("$v0");
+    private final Register stackPointer = new Register("$sp");
+    private final Register operandOneRegister = new Register("$s1");
+    private final Register operandTwoRegister = new Register("$s2");
+    private final Register destinationRegister = new Register("$s0");
+    private final Register returnAddressRegister = new Register("$ra");
 
+    // FUNCTION NAME DATA STRUCTURES
+    private String functionName; // stores name of our current function
+    private HashSet<String> functions; // stores name of all functions
+    
+    // STACK DATA STRUCTURES
+    private HashMap<String, Integer> variableStackOffset; // stores all variables offset from stack within a function
 
+    
+    private int maxStackOffset; // stores the maximum stack offset of our current stack frame
+    private String globalLabel; // stores the label of the current instruction
 
-    private String globalLabel;
-   
     public InstructionConverter() {
         mipsCreator = new InstructionCreator();
-        regMap = new ArrayList<>();
-        funcMap = new HashMap<>();
         functions = new HashSet<String>();
-        largestRegVal = 0;
         globalLabel = "";
         functionName = "";
+        maxStackOffset = 4;
+        variableStackOffset = new HashMap<>();        
     }
 
 
     // given the header for a function, allocate space for all of its variables, and 
     // move perameters out of argument registers 
     public List<MIPSInstruction> convertHeader(IRFunction function) {
+        // upon entering a new function assign space on the stack to store all of its variables
+        // and place all of its arguments on the stack in the correct positions
+
+
+        System.out.println("\n\n\n CONVERTING A HEADER \n\n\n");
+        maxStackOffset = 4;
+        variableStackOffset.clear();
         functionName = function.name;
-        createLabel(function);
-        List<MIPSInstruction> returnList = convertArguments(function);
+        List<MIPSInstruction> returnList = createLabel(function);
+        createStackOffsets(function);
+        returnList.addAll(saveReturnAddress());
+        returnList.addAll(convertArguments(function));
         returnList.addAll(allocateVariables(function));
+        printStackContents(function);
         return returnList;
 
     }
 
-    public void createLabel(IRFunction function) {
-        globalLabel = function.name;
+    private void printStackContents(IRFunction function) {
+        System.out.println("STACK CONTENTS AFTER ENTERING FUNCTION " + function.name);
+        printStackContents();
     }
 
+    private void printStackContents() {
+        for(Map.Entry<String, Integer> entry: variableStackOffset.entrySet()) {
+            System.out.println("VARIABLE " + entry.getKey() + " STORED AT OFFSET " + entry.getValue());
+        }
+    }
+
+    public List<MIPSInstruction> createLabel(IRFunction function) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        returnList.addAll(mipsCreator.createLabel(function.name));
+        return returnList;
+    }
+
+    private List<MIPSInstruction> saveReturnAddress() {
+        Imm saveOffset = new Imm("0", "DEC");
+        return mipsCreator.createStoreFromRegister(returnAddressRegister, stackPointer, saveOffset, getLabel());
+
+    }
+
+    private List<MIPSInstruction> restoreReturnAddress() {
+        Imm saveOffset = new Imm("0", "DEC");
+        return mipsCreator.createLoadToRegister(returnAddressRegister, stackPointer, saveOffset, getLabel());
+    }
+
+    // assigns stack offsets to all variables in functions
+    public void createStackOffsets(IRFunction function) {
+        for(IROperand variable : function.variables) {
+            convertVariableToStackOffset(variable);
+        }
+        for(IROperand variable : function.parameters) {
+            convertVariableToStackOffset(variable);
+        }
+    }
+
+    // moves arguments into their allocated offsets on the stack 
     public List<MIPSInstruction> convertArguments(IRFunction function) {
         List<MIPSInstruction> returnList = new LinkedList<>();
         for(int arg_num = 0; arg_num < function.parameters.size(); arg_num++) {
+            // grab variable where argument is stored 
             Register sourceReg = new Register(argsReg + arg_num);
-            Register destReg = variableToRegister(function.parameters.get(arg_num));
-            returnList.addAll(mipsCreator.createMove(destReg, sourceReg, getLabel()));
+            // move variable to stack
+            String varName = function.parameters.get(arg_num).toString();
+            returnList.addAll(loadValueToStack(sourceReg, variableStackOffset.get(varName)));
         }
         return returnList;
     }
@@ -64,110 +115,151 @@ public class InstructionConverter {
     public List<MIPSInstruction> allocateVariables(IRFunction function) {
         List<MIPSInstruction> returnList = new LinkedList<>(); 
         for(int var_num = 0; var_num < function.variables.size(); var_num++) {
-            // EDGE CASE: arrays can't be stored as registers, need to map into heap 
+            if(function.parameters.contains(function.variables.get(var_num))){
+                System.out.println("DUPLICATE VARIABLE SPOTTED");
+                 continue;
+            }
+            // EDGE CASE: if variable is an array, must allocate a pointer 
             if(function.variables.get(var_num).type instanceof IRArrayType) {
+                // create array pointer
                 IRArrayType var = (IRArrayType) function.variables.get(var_num).type;
-                Register arrayPtrReg = variableToRegister(function.variables.get(var_num));
-                Imm arraySizeImm = new Imm("" + var.getSize(), "DEC");
+                Register arrayPtrReg = operandOneRegister;
+                Imm arraySizeImm = new Imm("" + (var.getSize() * 4), "DEC"); // CONVERT SIZE FROM WORDS TO BYTES FOR SBRK CALL
                 returnList.addAll(mipsCreator.createArray(arraySizeImm, arrayPtrReg, getLabel()));
+                // load array pointer onto stack
+                String arrName = function.variables.get(var_num).toString();
+                returnList.addAll(loadValueToStack(arrayPtrReg, variableStackOffset.get(arrName)));
                 
             }
-            variableToRegister(function.variables.get(var_num));
         }
         return returnList;
     }
 
     public List<MIPSInstruction> convertInstruction(IRInstruction instruction) {  
+        List<MIPSInstruction> returnList = new LinkedList<>();
         // EDGE CASE: if instruction is an IR function call handle seperatly 
         if(IRFunctionCall(instruction)) {
-            return convertIRFunctionCall(instruction);
+            System.out.println("CONVERTING IR FUNCTION CALL");
+            returnList.addAll(convertIRFunctionCall(instruction));
+            return returnList;
         }
 
         // EDGE CASE: if operation manipulates memory handle seperatly
         if(dataOperation(instruction)) {
+            System.out.println("CONVERTING DATA OP");
             return convertDataType(instruction);
         }
 
         if(jType(instruction)) {
+            System.out.println("CONVERTING JUMP");
             return convertJType(instruction);
         }
         if(iType(instruction)) {
+            System.out.println("CONVERTING IMMEDIATE");
             return convertIType(instruction);
         } // if not i or J type then MUST be R type
+        System.out.println("CONVERTING R TYPE");
         return convertRType(instruction);
-
     }
 
 
     // TODO: WRITE METHOD TO CONVERT INTRINSIC IR FUNCTION CALLS
     private List<MIPSInstruction> convertIRFunctionCall(IRInstruction instruction) {
+        System.out.println("CONVERTING AN IR FUNCTION CALL");
+        List<MIPSInstruction> returnList = new LinkedList<>();
         switch(instruction.opCode) {
             case CALL:
-                Register printReg = funcMap.get(instruction.operands[1].toString());
+                Register printReg = null;
                 Imm printVal = null;
-                if(printReg == null) {
+                // if operand doesn't correspond to a variable then it must be an immediate
+                if(!variableStackOffset.containsKey(instruction.operands[1].toString())) {
                     printVal = createImmediate(instruction.operands[1]);
+                } else { // if operand corresponds to a variable load it into a register 
+                    printReg = operandOneRegister;
+                    returnList.addAll(variableToRegister(instruction.operands[1], printReg));
                 }
                 switch(instruction.operands[0].toString()) {
                     case "puti":
                         if(printReg == null) {
-                            return mipsCreator.createPUTI(printVal, getLabel());
+                            returnList.addAll(mipsCreator.createPUTI(printVal, getLabel()));
+                            return returnList;
                         }
-                        return mipsCreator.createPUTI(printReg, getLabel());
-                    
+                        returnList.addAll(mipsCreator.createPUTI(printReg, getLabel()));
+                        return returnList;
 
                     case "putc":
                         if(printReg == null) {
-                            return mipsCreator.createPUTC(printVal, getLabel());
+                            returnList.addAll(mipsCreator.createPUTC(printVal, getLabel()));
+                            return returnList;
                         }
-                        return mipsCreator.createPUTC(printReg, getLabel());
+                        returnList.addAll(mipsCreator.createPUTC(printReg, getLabel()));
+                        return returnList;
                 }
 
             case CALLR: 
-                Register returnReg = variableToRegister(instruction.operands[0]);
+                Register storeReg = destinationRegister;
+                returnList.addAll(variableToRegister(instruction.operands[0], storeReg));
                 switch(instruction.operands[1].toString()) {
-                case "geti":
-                    return mipsCreator.createGETI(returnReg, getLabel());
-                case "getc":
-                    return mipsCreator.createGETC(returnReg, getLabel());
+                    case "geti":
+                        returnList.addAll(mipsCreator.createGETI(storeReg, getLabel()));
+                        break;
+                    
+                    case "getc":
+                        returnList.addAll(mipsCreator.createGETC(storeReg, getLabel()));
+                        break;
 
+                    default:
+                        System.out.println("UNABLE TO CONVERT INSTRUCTION IN CONVERT IRFUNCTION");
+                        System.exit(-1);
                 }
-            
         }
-        System.out.println("RETURNING NULL INSTRUCTION IN CREATE IR FUNCTION CALL " + instruction.toString());
-        System.exit(0);
-        return null;
+        returnList.addAll(registerToStack(instruction.operands[0], destinationRegister));
+        return returnList;
     }
 
     private List<MIPSInstruction> convertDataType(IRInstruction instruction) {
-        Register arrayStoreReg = variableToRegister(instruction.operands[0]);
-        Register arrayPtrReg = variableToRegister(instruction.operands[1]);
-        Register offsetReg = funcMap.get(instruction.operands[2].toString());
+        List<MIPSInstruction> returnList = new LinkedList<MIPSInstruction>();
+        returnList.addAll(variableToRegister(instruction.operands[0], destinationRegister));
+        Register arrayStoreReg = destinationRegister;
+        returnList.addAll(variableToRegister(instruction.operands[1], operandOneRegister));
+        Register arrayPtrReg = operandOneRegister;
+        Register offsetReg = null;
+        Imm offsetImm = null;
+        if(variableStackOffset.containsKey(instruction.operands[2].toString())) {
+            returnList.addAll(variableToRegister(instruction.operands[2], operandTwoRegister));
+            offsetReg = operandTwoRegister;
+        } else {
+            offsetImm = createImmediate(instruction.operands[2]);
+        }
         switch(instruction.opCode) {
             // if assign allocate space for array on heap
             case ASSIGN:
                 System.out.println("ERROR: ARRAY ASSIGN UNEXPECTED");
-                System.exit(0);
+                System.exit(-1);
 
             // if load grab array value from memory 
             case ARRAY_LOAD:
                 // if immediate grab immediate 
                 if(offsetReg == null) {
-                    Imm offsetImm = createImmediate(instruction.operands[2]);
-                    return mipsCreator.createArrayLoad(arrayStoreReg, arrayPtrReg, offsetImm, getLabel());
+                    returnList.addAll(mipsCreator.createArrayLoad(arrayStoreReg, arrayPtrReg, offsetImm, getLabel()));;
+                } else {
+                    returnList.addAll(mipsCreator.createArrayLoad(arrayStoreReg, arrayPtrReg, offsetReg, getLabel()));
+                returnList.addAll(registerToStack(instruction.operands[0], arrayStoreReg));
+                return returnList;
                 }
-                return mipsCreator.createArrayLoad(arrayStoreReg, arrayPtrReg, offsetReg, getLabel());
 
             // if store, store reg value in array
             case ARRAY_STORE:
                 // if immediate grab immediate
                 if(offsetReg == null) {
-                    Imm offsetImm = createImmediate(instruction.operands[2]);
-                    return mipsCreator.createArrayStore(arrayStoreReg, arrayPtrReg, offsetImm, getLabel());
+                    returnList.addAll(mipsCreator.createArrayStore(arrayStoreReg, arrayPtrReg, offsetImm, getLabel()));
+                } else {
+                    returnList.addAll(mipsCreator.createArrayStore(arrayStoreReg, arrayPtrReg, offsetReg, getLabel()));
                 }
-                return mipsCreator.createArrayStore(arrayStoreReg, arrayPtrReg, offsetReg, getLabel());
+                returnList.addAll(registerToStack(instruction.operands[0], arrayStoreReg));
+                return returnList;
         }
-        System.out.println("RETURNING NULL INSTRUCTION IN CONVERT DATA TYPE " + instruction.toString());
+        System.out.println("UNABLE TO CONVERT INSTRUCTION IN CONVERT DATA TYPE");
         System.exit(0);
         return null;
         
@@ -182,55 +274,86 @@ public class InstructionConverter {
                 return mipsCreator.createJump(labelAddress, getLabel());
             }
             case CALL: {
+                System.out.println("CONVERTING A CALL INSTRUCTION");
                 // load arguments into argument registers
                 for(int i = 1; i < instruction.operands.length; i++) {
-                    // CHECK FOR IF ARGUMENT IS IMMEDIATE OR REGISTER!
-                    Register sourceReg = (funcMap.get(instruction.operands[i].toString()));
                     Register destReg = new Register(argsReg + (i - 1));
-                    if(sourceReg == null) {
+                    // CHECK FOR IF ARGUMENT IS IMMEDIATE OR VARIABLE!
+                    System.out.println("CHECKING IF OPERAND " + instruction.operands[i].toString() + " IS AN IMMEDIATE OR A VARIABLE");
+                    if(variableStackOffset.containsKey(instruction.operands[i].toString())) {
+                        returnList.addAll(variableToRegister(instruction.operands[i], operandOneRegister));
+                        returnList.addAll(mipsCreator.createMove(destReg, operandOneRegister, getLabel()));
+                    } else {
                         Imm sourceImm = createImmediate(instruction.operands[i]);
                         returnList.addAll(mipsCreator.createAdd(destReg, zeroReg, sourceImm, getLabel()));
-                    } else {
-                        returnList.addAll(mipsCreator.createMove(destReg, sourceReg, getLabel()));
-                    } 
-                } // jump after loading arguments
+                    }
+                }
+
+                 // ADJUST STACK POINTER BEFORE JUMPING!
+                 Imm stackInc = new Imm("" + (maxStackOffset), "DEC");
+                 returnList.addAll(mipsCreator.createSub(stackPointer, stackPointer, stackInc, getLabel())); // SUB BECAUSE STACK GROWS DOWN
+
+                 // JUMP
                 String label = makeLabel(instruction.operands[0].toString());
                 Addr labelAddress = new Addr(label);
                 returnList.addAll(mipsCreator.createLinkedJump(labelAddress, getLabel()));
+                
+                // ADJUST STACK POINTER AFTER RETURNING FROM JUMP
+                returnList.addAll(mipsCreator.createAdd(stackPointer, stackPointer, stackInc, getLabel())); // ADD BECAUSE STACK GROWS DOWN
                 return returnList;
+                
+                
             }
             case CALLR: {
                 // load arguments into argument registers
                 for(int i = 2; i < instruction.operands.length; i++) {
-                    // CHECK IF ARGUMENT IS IMMEDIATE OR REGISTER!
-                    Register sourceReg = funcMap.get(instruction.operands[i].toString());
                     Register destReg = new Register(argsReg + (i - 2));
-                    if(sourceReg == null) {
+                    // CHECK IF ARGUMENT IS IMMEDIATE OR VARIABLE
+                    if(variableStackOffset.containsKey(instruction.operands[i].toString())) {
+                        returnList.addAll(variableToRegister(instruction.operands[i], operandOneRegister));
+                        returnList.addAll(mipsCreator.createMove(destReg, operandOneRegister, getLabel()));
+                    } else {
                         Imm sourceImm = createImmediate(instruction.operands[i]);
                         returnList.addAll(mipsCreator.createAdd(destReg, zeroReg, sourceImm, getLabel()));
-                    } else {
-                        returnList.addAll(mipsCreator.createMove(destReg, sourceReg, getLabel()));
                     }
-                } // jump after loading arguments
+                } 
+
+                // ADJUST STACK POINTER BEFORE JUMPING - increment stack pointer by size of our current frame to allow for stack to grow in new frame
+                Imm stackInc = new Imm("" + maxStackOffset, "DEC");
+                returnList.addAll(mipsCreator.createSub(stackPointer, stackPointer, stackInc, getLabel())); // SUB BECAUSE STACK GROWS DOWN!
+                
+                // JUMP
                 String label = makeLabel(instruction.operands[1].toString());
                 Addr labelAddress = new Addr(label);
                 returnList.addAll(mipsCreator.createLinkedJump(labelAddress, getLabel()));
-                Register destReg = variableToRegister(instruction.operands[0]);
-                returnList.addAll(mipsCreator.createMove(destReg, returnReg, getLabel()));
+                // ADJUST STACK POINTER AFTER RETURNING FROM JUMP
+                System.out.println("STACK INC VALUE " + stackInc.val);
+                returnList.addAll(mipsCreator.createAdd(stackPointer, stackPointer, stackInc, getLabel())); // ADD BECAUSE STACK GROWS DOWN!
+
+                // after returning from jump v0 stores the return, assign it to the variable stored in operand 0
+                returnList.addAll(registerToStack(instruction.operands[0], returnReg));
                 return returnList;
             }
             case LABEL: {
-                globalLabel = functionName + "" + instruction.operands[0].toString();
-                return null;
+                List<MIPSInstruction> list = new LinkedList<>();
+                globalLabel = makeLabel(instruction.operands[0].toString());
+                System.out.println("GLOBAL LABEL = " + globalLabel );
+                list.addAll(mipsCreator.createLabel(getLabel()));
+                return list;
             }
             case RETURN: {
                 // check if we are returning an immediate
-                Register sourceReg = funcMap.get(instruction.operands[0].toString());
-                if(sourceReg == null) {
-                    Imm sourceImm = createImmediate(instruction.operands[0]);
-                    return mipsCreator.createReturn(returnReg, sourceImm, getLabel());
-                }
-                return mipsCreator.createReturn(returnReg, sourceReg, getLabel());
+                Register sourceReg = null;
+                Imm sourceImm = null;
+                if(variableStackOffset.containsKey(instruction.operands[0].toString())) {
+                    returnList.addAll(variableToRegister(instruction.operands[0], operandOneRegister));
+                    returnList.addAll(restoreReturnAddress());
+                    returnList.addAll(mipsCreator.createReturn(returnReg, operandOneRegister, getLabel()));
+                    return returnList;
+                }                     
+                sourceImm = createImmediate(instruction.operands[0]);
+                returnList.addAll(mipsCreator.createReturn(returnReg, sourceImm, getLabel()));
+                return returnList;
             }
             // if none of these cases are hit instruction must be a conditional branch
             default: {
@@ -240,201 +363,255 @@ public class InstructionConverter {
     }
     
     private List<MIPSInstruction> convertConditionalBranch(IRInstruction instruction) {
+        List<MIPSInstruction> returnList = new LinkedList<MIPSInstruction>();
         String label = makeLabel(instruction.operands[0].toString());
         Addr labelAddress = new Addr(label);
-        Register sourceRegOne = funcMap.get(instruction.operands[1].toString());
-        Register sourceRegTwo = funcMap.get(instruction.operands[2].toString());
+        Register sourceRegOne = null;
+        Register sourceRegTwo = null;
         Imm immValOne = null;
         Imm immValTwo = null;
-        if(sourceRegOne == null) {
+        if(variableStackOffset.containsKey(instruction.operands[1].toString())) {
+            sourceRegOne = operandOneRegister;
+            returnList.addAll(variableToRegister(instruction.operands[1], sourceRegOne));
+        } else {
             immValOne = createImmediate(instruction.operands[1]);
         }
-        if(sourceRegTwo == null) {
+        if(variableStackOffset.containsKey(instruction.operands[2].toString())) {
+            sourceRegTwo = operandTwoRegister;
+            returnList.addAll(variableToRegister(instruction.operands[2], sourceRegTwo));
+        } else {
             immValTwo = createImmediate(instruction.operands[2]);
         }
-        
         switch(instruction.opCode) {
             case BRNEQ: {
                 if(sourceRegOne == null) {
-                    return mipsCreator.createBRNEQ(labelAddress, sourceRegTwo, immValOne, getLabel());
+                    returnList.addAll(mipsCreator.createBRNEQ(labelAddress, sourceRegTwo, immValOne, getLabel()));
+                    return returnList;
                 }
                 if(sourceRegTwo == null) {
-                    return mipsCreator.createBRNEQ(labelAddress, sourceRegOne, immValTwo, getLabel());
+                    returnList.addAll(mipsCreator.createBRNEQ(labelAddress, sourceRegOne, immValTwo, getLabel()));
+                    return returnList;
                 }
-                return mipsCreator.createBRNEQ(labelAddress, sourceRegOne, sourceRegTwo, getLabel());
+                returnList.addAll(mipsCreator.createBRNEQ(labelAddress, sourceRegOne, sourceRegTwo, getLabel()));
+                return returnList;
             }
             case BREQ: {
                 if(sourceRegOne == null) {
-                    return mipsCreator.createBREQ(labelAddress, sourceRegTwo, immValOne, getLabel());
+                    returnList.addAll(mipsCreator.createBREQ(labelAddress, sourceRegTwo, immValOne, getLabel()));
+                    return returnList;
                 }
                 if(sourceRegTwo == null) {
-                    return mipsCreator.createBREQ(labelAddress, sourceRegOne, immValTwo, getLabel());
+                    returnList.addAll(mipsCreator.createBREQ(labelAddress, sourceRegOne, immValTwo, getLabel()));
+                    return returnList;
                 }
-                return mipsCreator.createBREQ(labelAddress, sourceRegOne, sourceRegTwo, getLabel());
+                returnList.addAll(mipsCreator.createBREQ(labelAddress, sourceRegOne, sourceRegTwo, getLabel()));
+                return returnList;
             }
             case BRLT: {
                 if(sourceRegOne == null) {
-                    return mipsCreator.createBRLT(labelAddress, immValOne, sourceRegTwo, getLabel());
+                    returnList.addAll(mipsCreator.createBRLT(labelAddress, immValOne, sourceRegTwo, getLabel()));
+                    return returnList;
                 }   
                 if(sourceRegTwo == null) {
-                    return mipsCreator.createBRLT(labelAddress, sourceRegOne, immValTwo, getLabel());
+                    returnList.addAll(mipsCreator.createBRLT(labelAddress, sourceRegOne, immValTwo, getLabel()));
+                    return returnList;
                 }
-                return mipsCreator.createBRLT(labelAddress, sourceRegOne, sourceRegTwo, getLabel());
+                returnList.addAll(mipsCreator.createBRLT(labelAddress, sourceRegOne, sourceRegTwo, getLabel()));
+                return returnList;
             }
             case BRGT: {
                 if(sourceRegOne == null) {
-                    return mipsCreator.createBRGT(labelAddress, immValOne, sourceRegTwo, getLabel());
+                    returnList.addAll(mipsCreator.createBRGT(labelAddress, immValOne, sourceRegTwo, getLabel()));
+                    return returnList;
                 }
                 if(sourceRegTwo == null) {
-                    return mipsCreator.createBRGT(labelAddress, sourceRegOne, immValTwo, getLabel());
+                    returnList.addAll(mipsCreator.createBRGT(labelAddress, sourceRegOne, immValTwo, getLabel()));
+                    return returnList;
                 }
-                return mipsCreator.createBRGT(labelAddress, sourceRegOne, sourceRegTwo, getLabel());
+                returnList.addAll(mipsCreator.createBRGT(labelAddress, sourceRegOne, sourceRegTwo, getLabel()));
+                return returnList;
             }
             case BRGEQ: {
                 if(sourceRegOne == null) {
-                    return mipsCreator.createBRGEQ(labelAddress, immValOne, sourceRegTwo, getLabel());
+                    returnList.addAll(mipsCreator.createBRGEQ(labelAddress, immValOne, sourceRegTwo, getLabel()));
+                    return returnList;
                 }
                 if(sourceRegTwo == null) {
-                    return mipsCreator.createBRGEQ(labelAddress, sourceRegOne, immValTwo, getLabel());
+                    returnList.addAll(mipsCreator.createBRGEQ(labelAddress, sourceRegOne, immValTwo, getLabel()));
+                    return returnList;
                 }
-                return mipsCreator.createBRGEQ(labelAddress, sourceRegOne, sourceRegTwo, getLabel());
+                returnList.addAll(mipsCreator.createBRGEQ(labelAddress, sourceRegOne, sourceRegTwo, getLabel()));
+                return returnList;
             }
             case BRLEQ: {
                 if(sourceRegOne == null) {
-                    return mipsCreator.createBRLEQ(labelAddress, immValOne, sourceRegTwo, getLabel());
+                    returnList.addAll(mipsCreator.createBRLEQ(labelAddress, immValOne, sourceRegTwo, getLabel()));
+                    return returnList;
                 }
                 if(sourceRegTwo == null) {
-                    return mipsCreator.createBRLEQ(labelAddress, immValOne, sourceRegTwo, getLabel());
+                    returnList.addAll(mipsCreator.createBRLEQ(labelAddress, immValOne, sourceRegTwo, getLabel()));
+                    return returnList;
                 }
-                return mipsCreator.createBRLEQ(labelAddress, sourceRegOne, sourceRegTwo, getLabel());
+                returnList.addAll(mipsCreator.createBRLEQ(labelAddress, sourceRegOne, sourceRegTwo, getLabel()));
+                return returnList;
             }
         }
-
-        System.out.println("RETURNING NULL INSTRUCTION IN CONVERT CONDITIONAL BRANCH" + instruction.toString());
-        System.exit(0);
+        System.out.println("UNABLE TO CONVERT INSTRUCTION IN CONVERT CONDITIONAL BRANCH");
+        System.exit(-1);
         return null;
     }
             
             
     private List<MIPSInstruction> convertRType(IRInstruction instruction) {
-        Register destReg = variableToRegister(instruction.operands[0]);
-        Register sourceRegOne = variableToRegister(instruction.operands[1]);
+        List<MIPSInstruction> returnList = new LinkedList<MIPSInstruction>();
+        // load in operand variables into registers
+        returnList.addAll(variableToRegister(instruction.operands[1], operandOneRegister));
         if(instruction.operands.length == 2) { // if only two operands exist must be an assign
-            return mipsCreator.createMove(destReg, sourceRegOne, getLabel());
+            returnList.addAll(mipsCreator.createMove(destinationRegister, operandOneRegister, getLabel()));
+            returnList.addAll(registerToStack(instruction.operands[0], destinationRegister));
+            return returnList;
         }
-        Register sourceRegTwo = variableToRegister(instruction.operands[2]);
+        returnList.addAll(variableToRegister(instruction.operands[2], operandTwoRegister));
         switch(instruction.opCode) {
             case ADD: {
-                return mipsCreator.createAdd(destReg, sourceRegOne, sourceRegTwo, getLabel());
+                returnList.addAll(mipsCreator.createAdd(destinationRegister, operandOneRegister, operandTwoRegister, getLabel()));
+                break;
             }
             case SUB: {
-                return mipsCreator.createSub(destReg, sourceRegOne, sourceRegTwo, getLabel());
+                returnList.addAll(mipsCreator.createSub(destinationRegister, operandOneRegister, operandTwoRegister, getLabel()));
+                break;
             }
             case MULT: {
-                return mipsCreator.createMult(destReg, sourceRegOne, sourceRegTwo, getLabel());
+                returnList.addAll(mipsCreator.createMult(destinationRegister, operandOneRegister, operandTwoRegister, getLabel()));
+                break;
             }
             case DIV: {
-                return mipsCreator.createDiv(destReg, sourceRegOne, sourceRegTwo, getLabel());
+                returnList.addAll(mipsCreator.createDiv(destinationRegister, operandOneRegister, operandTwoRegister, getLabel()));
+                break;
             }
             case AND: {
-                return mipsCreator.createAnd(destReg, sourceRegOne, sourceRegTwo, getLabel());
+                returnList.addAll(mipsCreator.createAnd(destinationRegister, operandOneRegister, operandTwoRegister, getLabel()));
+                break;
             }
             case OR: {
-                return mipsCreator.createOr(destReg, sourceRegOne, sourceRegTwo, getLabel());
+                returnList.addAll(mipsCreator.createOr(destinationRegister, operandOneRegister, operandTwoRegister, getLabel()));
+                break;
             }
+            default:
+                System.out.println("UNABLE TO CONVERT AN INSTRUCTION IN R TYPE");
+                System.exit(-1);
         }
-        System.out.println("RETURNING NULL INSTRUCTION IN CONVERT R TYPE ");
-        System.out.print(instruction.opCode);
-        for(int i = 0; i < instruction.operands.length; i++) {
-            System.out.print(" " + instruction.operands.toString());
-        }
-        System.out.println();
-        System.exit(0);
-        return null;
+        returnList.addAll(registerToStack(instruction.operands[0], destinationRegister));
+        return returnList;
     }
 
     private List<MIPSInstruction> convertIType(IRInstruction instruction) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
         Imm valOne = null;
         Imm valTwo = null;
+        Register sourceOneReg = null;
+        Register sourceTwoReg = null; 
+
         System.out.println("operand 0 = " + instruction.operands[0].toString());
         System.out.println("operand 1 = " + instruction.operands[1].toString());
-        Register destReg = variableToRegister(instruction.operands[0]);
-        Register regOne = funcMap.get(instruction.operands[1].toString());
-        if(instruction.operands.length == 2) { // if only two operands exist must be an assign
+        if(variableStackOffset.containsKey(instruction.operands[1].toString())) {
+            System.out.println("OPERAND " + instruction.operands[1].toString() + "IS A VARIABLE");
+            returnList.addAll(variableToRegister(instruction.operands[1], operandOneRegister));
+            sourceOneReg = operandOneRegister;
+        } else {
+            System.out.println("OPERAND " + instruction.operands[1].toString() + " IS A NUMBER");
             valOne = createImmediate(instruction.operands[1]);
-            return mipsCreator.createAdd(destReg, zeroReg, valOne, getLabel());
         }
-        Register regTwo = funcMap.get(instruction.operands[2].toString());
-        if(regOne == null) {
-            valOne = createImmediate(instruction.operands[1]);
-        } 
-        if(regTwo == null) {
+        if(instruction.operands.length == 2) { // if only two operands exist must be an assign
+            if(sourceOneReg == null) {
+                returnList.addAll(mipsCreator.createAdd(destinationRegister, zeroReg, valOne, getLabel()));
+            } else {
+                returnList.addAll(mipsCreator.createMove(destinationRegister, sourceOneReg, getLabel()));
+            }
+            System.out.println("MOVING VARIABLE " + instruction.operands[0].toString() + " to stack");
+            System.out.println("ITS OFFSET = " + variableStackOffset.get(instruction.operands[0].toString()));
+            returnList.addAll(registerToStack(instruction.operands[0], destinationRegister));
+            return returnList;
+        }
+        if(variableStackOffset.containsKey(instruction.operands[2].toString())) {
+            System.out.println("OPERAND " + instruction.operands[2].toString() + " IS A VARIABLE");
+            returnList.addAll(variableToRegister(instruction.operands[2], operandTwoRegister));
+            sourceTwoReg = operandTwoRegister;
+        } else {
+            System.out.println("OPERAND " + instruction.operands[2].toString() + " IS A NUMBER");
             valTwo = createImmediate(instruction.operands[2]);
         }
-
         switch(instruction.opCode) {
-            // ARITHMETIC INSTRUCTIONS
             case ADD: {
-                if(regOne == null && regTwo == null) {
-                    return mipsCreator.createAdd(destReg, valOne, valTwo, getLabel());
-                } else if (regTwo == null) { 
-                    return mipsCreator.createAdd(destReg, regOne, valTwo, getLabel());
+                if(sourceOneReg == null && sourceTwoReg == null) {
+                    returnList.addAll(mipsCreator.createAdd(destinationRegister, valOne, valTwo, getLabel()));
+                } else if (sourceTwoReg == null) { 
+                    returnList.addAll(mipsCreator.createAdd(destinationRegister, sourceOneReg, valTwo, getLabel()));
                 } else {
-                    return mipsCreator.createAdd(destReg, regTwo, valOne, getLabel());
+                    returnList.addAll(mipsCreator.createAdd(destinationRegister, sourceTwoReg, valOne, getLabel()));
                 }
+                break;
             }
             case SUB: {
-                if(regOne == null && regTwo == null) {
-                    return mipsCreator.createSub(destReg, valOne, valTwo, getLabel());
+                if(sourceOneReg == null && sourceTwoReg == null) {
+                    returnList.addAll(mipsCreator.createSub(destinationRegister, valOne, valTwo, getLabel()));
                 }
-                else if (regTwo == null) { 
-                    return mipsCreator.createSub(destReg, regOne, valTwo, getLabel());
+                else if (sourceTwoReg == null) { 
+                    returnList.addAll(mipsCreator.createSub(destinationRegister, sourceOneReg, valTwo, getLabel()));
                 }
                 else {
-                    return mipsCreator.createSub(destReg, valOne, regTwo, getLabel());
+                    returnList.addAll(mipsCreator.createSub(destinationRegister, valOne, sourceTwoReg, getLabel()));
                 }
+                break;
             }
             case MULT: {
-                if(regOne == null && regTwo == null) {
-                    return mipsCreator.createMult(destReg, valOne, valTwo, getLabel());
-                } else if (regTwo == null) {
-                    System.out.println("IMMEDIATE STORED IN LAST OPERAND");
-                    return mipsCreator.createMult(destReg, regOne, valTwo, getLabel());
+                if(sourceOneReg == null && sourceTwoReg == null) {
+                    returnList.addAll(mipsCreator.createMult(destinationRegister, valOne, valTwo, getLabel()));
+                } else if (sourceTwoReg == null) {
+                    returnList.addAll(mipsCreator.createMult(destinationRegister, sourceOneReg, valTwo, getLabel()));
+                    return returnList;
                 } else {
-                    return mipsCreator.createMult(destReg, regTwo, valOne, getLabel());
+                    returnList.addAll(mipsCreator.createMult(destinationRegister, sourceTwoReg, valOne, getLabel()));
                 }
+                break;
             }
             case DIV: {
-                if(regOne == null && regTwo == null) {
-                    return mipsCreator.createDiv(destReg, valOne, valTwo, getLabel());
-                } else if (regTwo == null) {
-                    return mipsCreator.createDiv(destReg, regOne, valTwo, getLabel());
+                if(sourceOneReg == null && sourceTwoReg == null) {
+                    returnList.addAll(mipsCreator.createDiv(destinationRegister, valOne, valTwo, getLabel()));
+                } else if (sourceTwoReg == null) {
+                    returnList.addAll(mipsCreator.createDiv(destinationRegister, sourceOneReg, valTwo, getLabel()));
                 } else {
-                    return mipsCreator.createDiv(destReg, valOne, regTwo, getLabel());
+                    returnList.addAll(mipsCreator.createDiv(destinationRegister, valOne, sourceTwoReg, getLabel()));
                 }
+                break;
             }
             case AND: {
-                if(regOne == null && regTwo == null) {
-                    return mipsCreator.createAnd(destReg, valOne, valTwo, getLabel());
-                } else if (regTwo == null) { 
-                    return mipsCreator.createAnd(destReg, regOne, valTwo, getLabel());
+                if(sourceOneReg == null && sourceTwoReg == null) {
+                    returnList.addAll(mipsCreator.createAnd(destinationRegister, valOne, valTwo, getLabel()));
+                } else if (sourceTwoReg == null) { 
+                    returnList.addAll(mipsCreator.createAnd(destinationRegister, sourceOneReg, valTwo, getLabel()));
                 } else {
-                    return mipsCreator.createAnd(destReg, regTwo, valOne, getLabel());
+                    returnList.addAll(mipsCreator.createAnd(destinationRegister, sourceTwoReg, valOne, getLabel()));
                 }
+                break;
             }
             case OR: {
-                if(regOne == null && regTwo == null) {
-                    return mipsCreator.createOr(destReg, valOne, valTwo, getLabel());
-                } else if (regTwo == null) { 
-                    return mipsCreator.createOr(destReg, regOne, valTwo, getLabel());
+                if(sourceOneReg == null && sourceTwoReg == null) {
+                    returnList.addAll(mipsCreator.createOr(destinationRegister, valOne, valTwo, getLabel()));
+                } else if (sourceOneReg == null) { 
+                    returnList.addAll(mipsCreator.createOr(destinationRegister, sourceOneReg, valTwo, getLabel()));
                 } else {
-                    return mipsCreator.createOr(destReg, regTwo, valOne, getLabel());
-                } 
+                    returnList.addAll(mipsCreator.createOr(destinationRegister, sourceTwoReg, valOne, getLabel()));
+                }
+                break; 
+            }
+            default: {
+                System.out.println("UNABLE TO ASSIGN AN INSTRUCTION IN CONVERT I TYPE");
+                System.exit(-1);
             }
         }
-        System.out.println("RETURNING NULL MIPS INSTRUCTION IN CONVERT I TYPE " + instruction.toString());
-        System.exit(0);
-        return null;
+        returnList.addAll(registerToStack(instruction.operands[0], destinationRegister));
+        return returnList;
     }
 
     private boolean jType (IRInstruction instruction) {
@@ -516,41 +693,69 @@ public class InstructionConverter {
         return false;
     }
 
-    // method should be called after every function to wipe values from function mapping!
-    public void clearFuncMap() {
-        // add funcMap values to regMap
-        HashMap<String, Register> hardCopy = new HashMap<>();
-        // Iterate over the original HashMap and copy each entry to the new HashMap
-        for (Map.Entry<String, Register> entry : funcMap.entrySet()) {
-            hardCopy.put(entry.getKey(), entry.getValue());
+
+
+    // given a variable and a register to write it to, write the variable to the register
+    private List<MIPSInstruction> variableToRegister(IROperand operand, Register storeReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        System.out.println("LOADING VARIABLE " + operand.toString() + " INTO A REGISTER");
+        // load the value in from the stack and place it in the specified register 
+        // grab the stack offset of our variable
+        int offset = findOffset(operand);
+        // load from the stack offset to register
+        returnList.addAll(loadValueToReg(storeReg, offset));
+        // return the instructions used to store the variable in a register
+        return returnList;
+    }
+
+    // given a variable and the register which holds the variable write the variable to the correct location on the stack
+    private List<MIPSInstruction> registerToStack(IROperand operand, Register storeReg) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        System.out.println("ATTEMPTING TO PLACE VARIABLE " + operand.toString() + " ONTO STACK");
+        // grab stack offset of variable
+        int offset = findOffset(operand);
+        // load from register to stack offset
+        returnList.addAll(loadValueToStack(storeReg, offset));
+        // return instructions used to store variable on stack
+        return returnList;
+    }
+
+    // given a variable returns the offset at which the variable is stored on the stack
+    private int findOffset(IROperand operand) {
+        if(!variableStackOffset.containsKey(operand.toString())) {
+            System.out.println("ATTEMPTED TO FIND OFFSET OF VARIABLE " + operand.toString() + " SO THAT WE COULD LOAD IT INTO A REG BUT NONE WAS FOUND");
+            try {
+                functions.add(null);
+            } catch(Exception e) {
+                e.printStackTrace();
+                System.exit(0);
+            }
         }
-        regMap.add(hardCopy);
-        
-        // clear funcMap so it can be used for the next function
-        funcMap.clear();
+        return(variableStackOffset.get(operand.toString()));
+    }
+
+    private List<MIPSInstruction> loadValueToReg(Register freeReg, int offset) {
+        System.out.println("\n\n\n LOADING VALUE INTO A REGISTER \n\n\n");
+        Imm offsetImm = new Imm("" + offset, "DEC");
+        return mipsCreator.createLoadToRegister(freeReg, stackPointer, offsetImm, getLabel());
+    }
+
+    private List<MIPSInstruction> loadValueToStack(Register dataReg, int offset) {
+        System.out.println("\n\n\n LOADING VALUE INTO STACK \n\n\n");
+        Imm offsetImm = new Imm("" + offset, "DEC");
+        return mipsCreator.createStoreFromRegister(dataReg, stackPointer, offsetImm, getLabel());
     }
 
 
-    // method should ONLY be used on destination registers which can either already be in funcMap or need to be allocated,
-    // ALL SOURCE REGISTERS SHOULD ALREADY BE IN funcMap!
-    private Register variableToRegister(IROperand operand) {
-        Register newReg;
-        if(funcMap.get(operand.toString()) == null) {
-            newReg = new Register(getEmptyRegister());
-            System.out.println("assigning register " + newReg.toString() + " to variable " + operand.toString());
-            funcMap.put(operand.toString(), newReg);
-        } else {
-            newReg = funcMap.get(operand.toString());
-            System.out.println("grabbed register " + newReg.toString() + " allocated to variable " + operand.toString());
-        }
-
-        return newReg;
-    }
-
-    private String getEmptyRegister() {
-        String returnString = tempReg + largestRegVal;
-        largestRegVal ++;
-        return returnString;
+    private void convertVariableToStackOffset(IROperand operand) {
+        // if variable is already assigned a stack offset return immediatly
+        if(variableStackOffset.containsKey(operand.toString())) {
+            return;
+        } 
+        // else assign it a stack offset and return
+        variableStackOffset.put(operand.toString(), maxStackOffset);
+        maxStackOffset += 4;
+        return;
     }
 
     private Imm createImmediate(IROperand operand) {
@@ -573,7 +778,19 @@ public class InstructionConverter {
             return labelName;
         }
         else {
-            return functionName + "_" + labelName;
+            return functionName + labelName;
+        }
+    }
+
+    // if function is main exit program else add jr
+    public List<MIPSInstruction> addExit(IRFunction function) {
+        if(function.name.equals("main")) {
+            return mipsCreator.createExit(getLabel());
+        } else {
+            List<MIPSInstruction> returnList = new LinkedList<>();
+            returnList.addAll(restoreReturnAddress());
+            returnList.addAll(mipsCreator.createJumpReturn(getLabel()));
+            return returnList;
         }
     }
 }

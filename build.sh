@@ -9,8 +9,8 @@ if [ ! -d "$BUILD_DIR" ]; then
     mkdir "$BUILD_DIR"
 fi
 
-# Compile Java source files and place them in the build directory
-javac -d "$BUILD_DIR" $(find "$SOURCE_DIR" -type f -name "*.java")
+# Compile Java source files with debugging information enabled and place them in the build directory
+javac -g -d "$BUILD_DIR" -cp "$BUILD_DIR" $(find "$SOURCE_DIR" -type f -name "*.java")
 
 # Check if the compilation was successful
 if [ $? -eq 0 ]; then

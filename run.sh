@@ -1,6 +1,6 @@
 #!/bin/bash
 
-java -cp build MipsCompiler ${@}
+java -cp build MipsCompiler ${1} ${2}
 
 # Write a script to run your backend
 # This script must take exactly one terminal argument:

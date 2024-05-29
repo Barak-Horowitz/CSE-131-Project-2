@@ -8,15 +8,17 @@ import main.java.mips.operand.*;
 
 
 public class InstructionCreator {
-    private final Register zeroReg = new Register("0");
-    private final Register tempReg = new Register("at"); // USE ARGUMENTS REGISTER AS TEMPORARY FOR MULTS/DIVS
-    private final Register returnReg = new Register("v0");
-    private final Register argsReg = new Register("a0");
+    private final Register zeroReg = new Register("$0");
+    private final Register tempReg = new Register("$at"); // USE ARGUMENTS REGISTER AS TEMPORARY FOR MULTS/DIVS
+    private final Register returnReg = new Register("$v0");
+    private final Register argsReg = new Register("$a0");
+    private final Register jumpReturnReg = new Register("$ra");
     private final String SbrkSyscallNum = "9";
     private final String printIntSyscallNum = "1";
     private final String printCharSyscallNum = "11";
     private final String getIntSyscallNum = "5";
     private final String getCharSyscallNum = "12";
+    private final String exitSyscallNum = "10";
     private final String offsetShift = "2";
     
     // ARITHMETIC OPERATIONS
@@ -69,8 +71,8 @@ public class InstructionCreator {
     // I Type
     public List<MIPSInstruction> createSub(Register destReg, Register sourceOneReg, Imm valTwo, String label) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        valTwo.val = (valTwo.getInt() * - 1 + "");
-        MIPSInstruction sub = new MIPSInstruction(MIPSOp.ADDI, label, destReg, sourceOneReg, valTwo);
+        Imm valTwoNeg = new Imm(valTwo.getInt() * - 1 + "", "DEC");
+        MIPSInstruction sub = new MIPSInstruction(MIPSOp.ADDI, label, destReg, sourceOneReg, valTwoNeg);
         returnList.add(sub);
         return returnList;
     }
@@ -90,7 +92,7 @@ public class InstructionCreator {
     // I Type 
     public List<MIPSInstruction> createSub(Register destReg, Imm valOne, Imm valTwo, String label) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        valTwo.val = (valTwo.getInt() * - 1 + "");
+        Imm valTwoNeg = new Imm(valTwo.getInt() * - 1 + "", "DEC");
         MIPSInstruction add = new MIPSInstruction(MIPSOp.ADDI, label, destReg, zeroReg, valOne);
         label = "";
         MIPSInstruction sub = new MIPSInstruction(MIPSOp.ADDI, label, destReg, destReg, valTwo);
@@ -243,9 +245,15 @@ public class InstructionCreator {
         return returnList;
     }
 
+    public List<MIPSInstruction> createLabel(String label) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        MIPSInstruction newLabel = new MIPSInstruction(MIPSOp.ADD, label, zeroReg, zeroReg, zeroReg);
+        returnList.add(newLabel);
+        return returnList;
+    }
     public List<MIPSInstruction> createJumpReturn(String label) {
         List<MIPSInstruction> returnList = new LinkedList<>();
-        MIPSInstruction returnJump = new MIPSInstruction(MIPSOp.JR, label);
+        MIPSInstruction returnJump = new MIPSInstruction(MIPSOp.JR, label, jumpReturnReg);
         returnList.add(returnJump);
         return returnList;
     }
@@ -286,7 +294,7 @@ public class InstructionCreator {
         List<MIPSInstruction> returnList = new LinkedList<>();
         returnList.addAll(createSub(tempReg, sourceOneReg, sourceTwoReg, label));
         label = "";
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLT, label, tempReg, address);
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLT, label, tempReg, zeroReg, address);
         returnList.add(branch);
         return returnList;
     }
@@ -295,7 +303,7 @@ public class InstructionCreator {
         List<MIPSInstruction> returnList = new LinkedList<>();
         returnList.addAll(createSub(tempReg, sourceOneReg, immValTwo, label));
         label = "";
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLT, label, tempReg, address);
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLT, label, tempReg, zeroReg, address);
         returnList.add(branch);
         return returnList;
     }
@@ -307,7 +315,7 @@ public class InstructionCreator {
         List<MIPSInstruction> returnList = new LinkedList<>();
         returnList.addAll(createSub(tempReg, immValOne, sourceTwoReg, label));
         label = "";
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLT, label, tempReg, address);
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLT, label, tempReg, zeroReg, address);
         returnList.add(branch);
         return returnList;
     }
@@ -317,7 +325,7 @@ public class InstructionCreator {
         List<MIPSInstruction> returnList = new LinkedList<>();
         returnList.addAll(createSub(tempReg, sourceOneReg, sourceTwoReg, label));
         label = "";
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGT, label, tempReg, address);
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGT, label, tempReg, zeroReg, address);
         returnList.add(branch);
         return returnList;
     }
@@ -326,7 +334,7 @@ public class InstructionCreator {
         List<MIPSInstruction> returnList = new LinkedList<>();
         returnList.addAll(createSub(tempReg, sourceOneReg, immValTwo, label));
         label = "";
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGT, label, tempReg, address);
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGT, label, tempReg, zeroReg, address);
         returnList.add(branch);
         return returnList;
     }
@@ -335,7 +343,7 @@ public class InstructionCreator {
         List<MIPSInstruction> returnList = new LinkedList<>();
         returnList.addAll(createSub(tempReg, immValOne, sourceTwoReg, label));
         label = "";
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGT, label, tempReg, address);
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGT, label, tempReg, zeroReg, address);
         returnList.add(branch);
         return returnList;
     }
@@ -344,7 +352,7 @@ public class InstructionCreator {
         List<MIPSInstruction> returnList = new LinkedList<>();
         returnList.addAll(createSub(tempReg, sourceOneReg, sourceTwoReg, label));
         label = "";
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGE, label, tempReg, address);
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGE, label, tempReg, zeroReg, address);
         returnList.add(branch);
         return returnList;
     }
@@ -353,7 +361,7 @@ public class InstructionCreator {
         List<MIPSInstruction> returnList = new LinkedList<>();
         returnList.addAll(createSub(tempReg, sourceOneReg, immValTwo, label));
         label = "";
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGE, label, tempReg, address);
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGE, label, tempReg, zeroReg, address);
         returnList.add(branch);
         return returnList;
     }
@@ -362,7 +370,7 @@ public class InstructionCreator {
         List<MIPSInstruction> returnList = new LinkedList<>();
         returnList.addAll(createSub(tempReg, immValOne, sourceTwoReg, label));
         label = "";
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGE, label, tempReg, address);
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BGE, label, tempReg, zeroReg, address);
         returnList.add(branch);
         return returnList;
     }
@@ -371,7 +379,7 @@ public class InstructionCreator {
         List<MIPSInstruction> returnList = new LinkedList<>();
         returnList.addAll(createSub(tempReg, sourceRegOne, sourceRegTwo, label));
         label = "";
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLE, label, tempReg, address);
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLE, label, tempReg, zeroReg, address);
         returnList.add(branch);
         return returnList;
     }
@@ -380,7 +388,7 @@ public class InstructionCreator {
         List<MIPSInstruction> returnList = new LinkedList<>();
         returnList.addAll(createSub(tempReg, sourceRegOne, immValTwo, label));
         label = "";
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLE, label, tempReg, address);
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLE, label, tempReg, zeroReg, address);
         returnList.add(branch);
         return returnList;
     }
@@ -389,7 +397,7 @@ public class InstructionCreator {
         List<MIPSInstruction> returnList = new LinkedList<>();
         returnList.addAll(createSub(tempReg, immValOne, sourceRegTwo, label));
         label = "";
-        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLE, label, tempReg, address);
+        MIPSInstruction branch = new MIPSInstruction(MIPSOp.BLE, label, tempReg, zeroReg, address);
         returnList.add(branch);
         return returnList;
     }
@@ -437,8 +445,10 @@ public class InstructionCreator {
         MIPSInstruction sll = new MIPSInstruction(MIPSOp.SLL,label, tempReg, tempReg, shiftImm);
         returnList.add(sll);
         // add address of array to assembler temporary 
+        // convert from register to address
+        Addr tempRegAddr = new Addr(tempReg);
         returnList.addAll(createAdd(tempReg, tempReg, arrayPtrReg, label));
-        MIPSInstruction arrayLoad = new MIPSInstruction(MIPSOp.LW, label, arrayStoreReg, tempReg);
+        MIPSInstruction arrayLoad = new MIPSInstruction(MIPSOp.LW, label, arrayStoreReg, tempRegAddr);
         returnList.add(arrayLoad);
         return returnList;
     }
@@ -451,9 +461,12 @@ public class InstructionCreator {
         // left shift to account for number of bytes in int
         Imm shiftImm  = new Imm(offsetShift, "DEC");
         MIPSInstruction sll = new MIPSInstruction(MIPSOp.SLL, label, tempReg, tempReg, shiftImm);
+        returnList.add(sll);
         // add address of array to assembler temporary
         returnList.addAll(createAdd(tempReg, tempReg, arrayPtrReg, label));
-        MIPSInstruction arrayLoad = new MIPSInstruction(MIPSOp.LW, label, arrayStoreReg, tempReg);
+        // convert tempReg to Addr 
+        Addr tempRegAddr = new Addr(tempReg);
+        MIPSInstruction arrayLoad = new MIPSInstruction(MIPSOp.LW, label, arrayStoreReg, tempRegAddr);
         returnList.add(arrayLoad);
         return returnList;
     }
@@ -469,7 +482,9 @@ public class InstructionCreator {
         returnList.add(sll);
         // add address of array to assembler temporary 
         returnList.addAll(createAdd(tempReg, tempReg, arrayPtrReg, label));
-        MIPSInstruction arrayStore = new MIPSInstruction(MIPSOp.SW, label, arrayStoreReg, tempReg);
+        // convert tempReg to address
+        Addr tempRegAddr = new Addr(tempReg);
+        MIPSInstruction arrayStore = new MIPSInstruction(MIPSOp.SW, label, arrayStoreReg, tempRegAddr);
         returnList.add(arrayStore);
         return returnList;
     }
@@ -482,9 +497,12 @@ public class InstructionCreator {
         // left shift to account for number of bytes in int
         Imm shiftImm  = new Imm(offsetShift, "DEC");
         MIPSInstruction sll = new MIPSInstruction(MIPSOp.SLL, label, tempReg, tempReg, shiftImm);
+        returnList.add(sll);
         // add address of array to assembler temporary
         returnList.addAll(createAdd(tempReg, tempReg, arrayPtrReg, label));
-        MIPSInstruction arrayStore = new MIPSInstruction(MIPSOp.SW, label, arrayStoreReg, tempReg);
+        // convert tempReg to Addr
+        Addr tempRegAddr = new Addr(tempReg);
+        MIPSInstruction arrayStore = new MIPSInstruction(MIPSOp.SW, label, arrayStoreReg, tempRegAddr);
         returnList.add(arrayStore);
         return returnList;
     }
@@ -575,6 +593,47 @@ public class InstructionCreator {
         // move returned integer into destination
         returnList.addAll(createMove(destReg, returnReg, label));
         return returnList;
+    }
+
+    public List<MIPSInstruction> createLoadToRegister(Register destReg, Register pointerReg, Imm offsetImm, String label) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        // store location in memory we are reading from in the assembly temporary
+        // stack grows down so offset should subtract from pointer not add
+        returnList.addAll(createSub(tempReg, pointerReg, offsetImm, label));
+        label = "";
+        // grab value at location stored in at and place it in the destination register 
+        Addr tempRegAddr = new Addr(tempReg);
+        MIPSInstruction storeWord = new MIPSInstruction(MIPSOp.LW, label, destReg, tempRegAddr);
+        returnList.add(storeWord);
+        return returnList;
+    }
+
+    public List<MIPSInstruction> createStoreFromRegister(Register sourceReg, Register pointerReg, Imm offsetImm, String label) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        // store location in memory we are writing to in the assembly temporary
+        // stack grows down so offset should subtract from pointer not add 
+        returnList.addAll(createSub(tempReg, pointerReg, offsetImm, label));
+        label = "";
+        // grab value in source reg and place it in the address stored in the assembly temporary
+        // convert tempReg to addr
+        Addr tempRegAddr = new Addr(tempReg);
+        MIPSInstruction loadWord = new MIPSInstruction(MIPSOp.SW, label, sourceReg, tempRegAddr);
+        returnList.add(loadWord);
+        return returnList;
+    }
+
+    // returns a function exit syscall
+    public List<MIPSInstruction> createExit(String label) {
+        List<MIPSInstruction> returnList = new LinkedList<>();
+        Imm returnVal = new Imm(exitSyscallNum + "", "DEC");
+        returnList.addAll(createAdd(returnReg, zeroReg, returnVal, label));
+        label = "";
+        MIPSInstruction syscall = new MIPSInstruction(MIPSOp.SYSCALL, label);
+        returnList.add(syscall);
+        return returnList;
+
+        
+
     }
 
 }
