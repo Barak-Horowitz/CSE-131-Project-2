@@ -63,8 +63,8 @@ ATTEMPTING TO PLACE VARIABLE i ONTO STACK
 
 CONVERTED TO MIPS INSTRUCTIONS
 addi $s0, $0, 0
-addi $at, $sp, -40
-sw $s0, ($at)
+addi $t0, $sp, -40
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 assign j 0
 CONVERTING IMMEDIATE
@@ -83,8 +83,8 @@ ATTEMPTING TO PLACE VARIABLE j ONTO STACK
 
 CONVERTED TO MIPS INSTRUCTIONS
 addi $s0, $0, 0
-addi $at, $sp, -44
-sw $s0, ($at)
+addi $t0, $sp, -44
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 brgeq end lo hi
 CONVERTING JUMP
@@ -105,12 +105,12 @@ LOADING VARIABLE hi INTO A REGISTER
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -12
-lw $s1, ($at)
-addi $at, $sp, -8
-lw $s2, ($at)
-sub $at, $s1, $s2
-bge $at, $0, quicksortend
+addi $t0, $sp, -12
+lw $s1, ($t0)
+addi $t0, $sp, -8
+lw $s2, ($t0)
+sub $t0, $s1, $s2
+bge $t0, $0, quicksortend
 CONVERTING IR INSTRUCTION
 add mid lo hi
 CONVERTING R TYPE
@@ -139,13 +139,13 @@ ATTEMPTING TO PLACE VARIABLE mid ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -12
-lw $s1, ($at)
-addi $at, $sp, -8
-lw $s2, ($at)
+addi $t0, $sp, -12
+lw $s1, ($t0)
+addi $t0, $sp, -8
+lw $s2, ($t0)
 add $s0, $s1, $s2
-addi $at, $sp, -32
-sw $s0, ($at)
+addi $t0, $sp, -32
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 div mid mid 2
 CONVERTING IMMEDIATE
@@ -170,12 +170,12 @@ ATTEMPTING TO PLACE VARIABLE mid ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -32
-lw $s1, ($at)
+addi $t0, $sp, -32
+lw $s1, ($t0)
 addi $s0, $0, 2
 div $s0, $s1, $s0
-addi $at, $sp, -32
-sw $s0, ($at)
+addi $t0, $sp, -32
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 array_load pivot A mid
 CONVERTING DATA OP
@@ -195,14 +195,9 @@ LOADING VARIABLE A INTO A REGISTER
 
 
 
-LOADING VARIABLE mid INTO A REGISTER
-
-
-
- LOADING VALUE INTO A REGISTER 
-
-
-
+VARIABLE mid IS ALREADY STORED IN A REGISTER!
+PREV REGISTER = $s1
+NEW REGISTER = $s2
 ATTEMPTING TO PLACE VARIABLE pivot ONTO STACK
 
 
@@ -212,32 +207,26 @@ ATTEMPTING TO PLACE VARIABLE pivot ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -36
-lw $s0, ($at)
-addi $at, $sp, -4
-lw $s1, ($at)
-addi $at, $sp, -32
-lw $s2, ($at)
-move $at, $s2
-sll $at, $at, 2
-add $at, $at, $s1
-lw $s0, ($at)
-addi $at, $sp, -36
-sw $s0, ($at)
+addi $t0, $sp, -36
+lw $s0, ($t0)
+addi $t0, $sp, -4
+lw $s1, ($t0)
+move $s2, $s1
+move $t0, $s2
+sll $t0, $t0, 2
+add $t0, $t0, $s1
+lw $s0, ($t0)
+addi $t0, $sp, -36
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 sub i lo 1
 CONVERTING IMMEDIATE
 operand 0 = i
 operand 1 = lo
 OPERAND loIS A VARIABLE
-LOADING VARIABLE lo INTO A REGISTER
-
-
-
- LOADING VALUE INTO A REGISTER 
-
-
-
+VARIABLE lo IS ALREADY STORED IN A REGISTER!
+PREV REGISTER = $s1
+NEW REGISTER = $s1
 OPERAND 1 IS A NUMBER
 ATTEMPTING TO PLACE VARIABLE i ONTO STACK
 
@@ -248,25 +237,19 @@ ATTEMPTING TO PLACE VARIABLE i ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -12
-lw $s1, ($at)
+move $s1, $s1
 addi $s0, $s1, -1
-addi $at, $sp, -40
-sw $s0, ($at)
+addi $t0, $sp, -40
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 add j hi 1
 CONVERTING IMMEDIATE
 operand 0 = j
 operand 1 = hi
 OPERAND hiIS A VARIABLE
-LOADING VARIABLE hi INTO A REGISTER
-
-
-
- LOADING VALUE INTO A REGISTER 
-
-
-
+VARIABLE hi IS ALREADY STORED IN A REGISTER!
+PREV REGISTER = $s2
+NEW REGISTER = $s1
 OPERAND 1 IS A NUMBER
 ATTEMPTING TO PLACE VARIABLE j ONTO STACK
 
@@ -277,11 +260,10 @@ ATTEMPTING TO PLACE VARIABLE j ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -8
-lw $s1, ($at)
+move $s1, $s2
 addi $s0, $s1, 1
-addi $at, $sp, -44
-sw $s0, ($at)
+addi $t0, $sp, -44
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 label loop0
 CONVERTING JUMP
@@ -318,11 +300,11 @@ ATTEMPTING TO PLACE VARIABLE i ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -40
-lw $s1, ($at)
+addi $t0, $sp, -40
+lw $s1, ($t0)
 addi $s0, $s1, 1
-addi $at, $sp, -40
-sw $s0, ($at)
+addi $t0, $sp, -40
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 array_load x A i
 CONVERTING DATA OP
@@ -342,14 +324,9 @@ LOADING VARIABLE A INTO A REGISTER
 
 
 
-LOADING VARIABLE i INTO A REGISTER
-
-
-
- LOADING VALUE INTO A REGISTER 
-
-
-
+VARIABLE i IS ALREADY STORED IN A REGISTER!
+PREV REGISTER = $s1
+NEW REGISTER = $s2
 ATTEMPTING TO PLACE VARIABLE x ONTO STACK
 
 
@@ -359,29 +336,23 @@ ATTEMPTING TO PLACE VARIABLE x ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -28
-lw $s0, ($at)
-addi $at, $sp, -4
-lw $s1, ($at)
-addi $at, $sp, -40
-lw $s2, ($at)
-move $at, $s2
-sll $at, $at, 2
-add $at, $at, $s1
-lw $s0, ($at)
-addi $at, $sp, -28
-sw $s0, ($at)
+addi $t0, $sp, -28
+lw $s0, ($t0)
+addi $t0, $sp, -4
+lw $s1, ($t0)
+move $s2, $s1
+move $t0, $s2
+sll $t0, $t0, 2
+add $t0, $t0, $s1
+lw $s0, ($t0)
+addi $t0, $sp, -28
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 assign ti x
 CONVERTING R TYPE
-LOADING VARIABLE x INTO A REGISTER
-
-
-
- LOADING VALUE INTO A REGISTER 
-
-
-
+VARIABLE x IS ALREADY STORED IN A REGISTER!
+PREV REGISTER = $s0
+NEW REGISTER = $s1
 ATTEMPTING TO PLACE VARIABLE ti ONTO STACK
 
 
@@ -391,11 +362,10 @@ ATTEMPTING TO PLACE VARIABLE ti ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -28
-lw $s1, ($at)
+move $s1, $s0
 move $s0, $s1
-addi $at, $sp, -16
-sw $s0, ($at)
+addi $t0, $sp, -16
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 brlt loop1 ti pivot
 CONVERTING JUMP
@@ -416,12 +386,12 @@ LOADING VARIABLE pivot INTO A REGISTER
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -16
-lw $s1, ($at)
-addi $at, $sp, -36
-lw $s2, ($at)
-sub $at, $s1, $s2
-blt $at, $0, quicksortloop1
+addi $t0, $sp, -16
+lw $s1, ($t0)
+addi $t0, $sp, -36
+lw $s2, ($t0)
+sub $t0, $s1, $s2
+blt $t0, $0, quicksortloop1
 CONVERTING IR INSTRUCTION
 label loop2
 CONVERTING JUMP
@@ -452,11 +422,11 @@ ATTEMPTING TO PLACE VARIABLE j ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -44
-lw $s1, ($at)
+addi $t0, $sp, -44
+lw $s1, ($t0)
 addi $s0, $s1, -1
-addi $at, $sp, -44
-sw $s0, ($at)
+addi $t0, $sp, -44
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 array_load x A j
 CONVERTING DATA OP
@@ -476,14 +446,9 @@ LOADING VARIABLE A INTO A REGISTER
 
 
 
-LOADING VARIABLE j INTO A REGISTER
-
-
-
- LOADING VALUE INTO A REGISTER 
-
-
-
+VARIABLE j IS ALREADY STORED IN A REGISTER!
+PREV REGISTER = $s1
+NEW REGISTER = $s2
 ATTEMPTING TO PLACE VARIABLE x ONTO STACK
 
 
@@ -493,29 +458,23 @@ ATTEMPTING TO PLACE VARIABLE x ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -28
-lw $s0, ($at)
-addi $at, $sp, -4
-lw $s1, ($at)
-addi $at, $sp, -44
-lw $s2, ($at)
-move $at, $s2
-sll $at, $at, 2
-add $at, $at, $s1
-lw $s0, ($at)
-addi $at, $sp, -28
-sw $s0, ($at)
+addi $t0, $sp, -28
+lw $s0, ($t0)
+addi $t0, $sp, -4
+lw $s1, ($t0)
+move $s2, $s1
+move $t0, $s2
+sll $t0, $t0, 2
+add $t0, $t0, $s1
+lw $s0, ($t0)
+addi $t0, $sp, -28
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 assign tj x
 CONVERTING R TYPE
-LOADING VARIABLE x INTO A REGISTER
-
-
-
- LOADING VALUE INTO A REGISTER 
-
-
-
+VARIABLE x IS ALREADY STORED IN A REGISTER!
+PREV REGISTER = $s0
+NEW REGISTER = $s1
 ATTEMPTING TO PLACE VARIABLE tj ONTO STACK
 
 
@@ -525,11 +484,10 @@ ATTEMPTING TO PLACE VARIABLE tj ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -28
-lw $s1, ($at)
+move $s1, $s0
 move $s0, $s1
-addi $at, $sp, -20
-sw $s0, ($at)
+addi $t0, $sp, -20
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 brgt loop2 tj pivot
 CONVERTING JUMP
@@ -550,12 +508,12 @@ LOADING VARIABLE pivot INTO A REGISTER
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -20
-lw $s1, ($at)
-addi $at, $sp, -36
-lw $s2, ($at)
-sub $at, $s1, $s2
-bgt $at, $0, quicksortloop2
+addi $t0, $sp, -20
+lw $s1, ($t0)
+addi $t0, $sp, -36
+lw $s2, ($t0)
+sub $t0, $s1, $s2
+bgt $t0, $0, quicksortloop2
 CONVERTING IR INSTRUCTION
 brgeq exit0 i j
 CONVERTING JUMP
@@ -576,12 +534,12 @@ LOADING VARIABLE j INTO A REGISTER
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -40
-lw $s1, ($at)
-addi $at, $sp, -44
-lw $s2, ($at)
-sub $at, $s1, $s2
-bge $at, $0, quicksortexit0
+addi $t0, $sp, -40
+lw $s1, ($t0)
+addi $t0, $sp, -44
+lw $s2, ($t0)
+sub $t0, $s1, $s2
+bge $t0, $0, quicksortexit0
 CONVERTING IR INSTRUCTION
 array_store ti A j
 CONVERTING DATA OP
@@ -618,18 +576,18 @@ ATTEMPTING TO PLACE VARIABLE ti ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -16
-lw $s0, ($at)
-addi $at, $sp, -4
-lw $s1, ($at)
-addi $at, $sp, -44
-lw $s2, ($at)
-move $at, $s2
-sll $at, $at, 2
-add $at, $at, $s1
-sw $s0, ($at)
-addi $at, $sp, -16
-sw $s0, ($at)
+addi $t0, $sp, -16
+lw $s0, ($t0)
+addi $t0, $sp, -4
+lw $s1, ($t0)
+addi $t0, $sp, -44
+lw $s2, ($t0)
+move $t0, $s2
+sll $t0, $t0, 2
+add $t0, $t0, $s1
+sw $s0, ($t0)
+addi $t0, $sp, -16
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 array_store tj A i
 CONVERTING DATA OP
@@ -641,14 +599,9 @@ LOADING VARIABLE tj INTO A REGISTER
 
 
 
-LOADING VARIABLE A INTO A REGISTER
-
-
-
- LOADING VALUE INTO A REGISTER 
-
-
-
+VARIABLE A IS ALREADY STORED IN A REGISTER!
+PREV REGISTER = $s1
+NEW REGISTER = $s1
 LOADING VARIABLE i INTO A REGISTER
 
 
@@ -666,18 +619,17 @@ ATTEMPTING TO PLACE VARIABLE tj ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -20
-lw $s0, ($at)
-addi $at, $sp, -4
-lw $s1, ($at)
-addi $at, $sp, -40
-lw $s2, ($at)
-move $at, $s2
-sll $at, $at, 2
-add $at, $at, $s1
-sw $s0, ($at)
-addi $at, $sp, -20
-sw $s0, ($at)
+addi $t0, $sp, -20
+lw $s0, ($t0)
+move $s1, $s1
+addi $t0, $sp, -40
+lw $s2, ($t0)
+move $t0, $s2
+sll $t0, $t0, 2
+add $t0, $t0, $s1
+sw $s0, ($t0)
+addi $t0, $sp, -20
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 goto loop0
 CONVERTING JUMP
@@ -713,11 +665,11 @@ ATTEMPTING TO PLACE VARIABLE j1 ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -44
-lw $s1, ($at)
+addi $t0, $sp, -44
+lw $s1, ($t0)
 addi $s0, $s1, 1
-addi $at, $sp, -24
-sw $s0, ($at)
+addi $t0, $sp, -24
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 call quicksort A lo j
 CONVERTING JUMP
@@ -741,23 +693,17 @@ LOADING VARIABLE lo INTO A REGISTER
 
 
 CHECKING IF OPERAND j IS AN IMMEDIATE OR A VARIABLE
-LOADING VARIABLE j INTO A REGISTER
-
-
-
- LOADING VALUE INTO A REGISTER 
-
-
-
+VARIABLE j IS ALREADY STORED IN A REGISTER!
+PREV REGISTER = $s1
+NEW REGISTER = $s1
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -4
-lw $s1, ($at)
+addi $t0, $sp, -4
+lw $s1, ($t0)
 move $a0, $s1
-addi $at, $sp, -12
-lw $s1, ($at)
+addi $t0, $sp, -12
+lw $s1, ($t0)
 move $a1, $s1
-addi $at, $sp, -44
-lw $s1, ($at)
+move $s1, $s1
 move $a2, $s1
 addi $sp, $sp, -48
 jal quicksort
@@ -768,14 +714,9 @@ CONVERTING IMMEDIATE
 operand 0 = j
 operand 1 = j
 OPERAND jIS A VARIABLE
-LOADING VARIABLE j INTO A REGISTER
-
-
-
- LOADING VALUE INTO A REGISTER 
-
-
-
+VARIABLE j IS ALREADY STORED IN A REGISTER!
+PREV REGISTER = $s1
+NEW REGISTER = $s1
 OPERAND 1 IS A NUMBER
 ATTEMPTING TO PLACE VARIABLE j ONTO STACK
 
@@ -786,33 +727,22 @@ ATTEMPTING TO PLACE VARIABLE j ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -44
-lw $s1, ($at)
+move $s1, $s1
 addi $s0, $s1, 1
-addi $at, $sp, -44
-sw $s0, ($at)
+addi $t0, $sp, -44
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 call quicksort A j hi
 CONVERTING JUMP
 CONVERTING A CALL INSTRUCTION
 CHECKING IF OPERAND A IS AN IMMEDIATE OR A VARIABLE
-LOADING VARIABLE A INTO A REGISTER
-
-
-
- LOADING VALUE INTO A REGISTER 
-
-
-
+VARIABLE A IS ALREADY STORED IN A REGISTER!
+PREV REGISTER = $s1
+NEW REGISTER = $s1
 CHECKING IF OPERAND j IS AN IMMEDIATE OR A VARIABLE
-LOADING VARIABLE j INTO A REGISTER
-
-
-
- LOADING VALUE INTO A REGISTER 
-
-
-
+VARIABLE j IS ALREADY STORED IN A REGISTER!
+PREV REGISTER = $s1
+NEW REGISTER = $s1
 CHECKING IF OPERAND hi IS AN IMMEDIATE OR A VARIABLE
 LOADING VARIABLE hi INTO A REGISTER
 
@@ -823,14 +753,12 @@ LOADING VARIABLE hi INTO A REGISTER
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -4
-lw $s1, ($at)
+move $s1, $s1
 move $a0, $s1
-addi $at, $sp, -44
-lw $s1, ($at)
+move $s1, $s1
 move $a1, $s1
-addi $at, $sp, -8
-lw $s1, ($at)
+addi $t0, $sp, -8
+lw $s1, ($t0)
 move $a2, $s1
 addi $sp, $sp, -48
 jal quicksort
@@ -878,8 +806,8 @@ ATTEMPTING TO PLACE VARIABLE t ONTO STACK
 
 CONVERTED TO MIPS INSTRUCTIONS
 addi $s0, $0, 0
-addi $at, $sp, -8
-sw $s0, ($at)
+addi $t0, $sp, -8
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 callr n geti
 CONVERTING IR FUNCTION CALL
@@ -901,29 +829,23 @@ ATTEMPTING TO PLACE VARIABLE n ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -16
-lw $s0, ($at)
+addi $t0, $sp, -16
+lw $s0, ($t0)
 addi $v0, $0, 5
 syscall
 move $s0, $v0
-addi $at, $sp, -16
-sw $s0, ($at)
+addi $t0, $sp, -16
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 brgt return n 100
 CONVERTING JUMP
-LOADING VARIABLE n INTO A REGISTER
-
-
-
- LOADING VALUE INTO A REGISTER 
-
-
-
+VARIABLE n IS ALREADY STORED IN A REGISTER!
+PREV REGISTER = $s0
+NEW REGISTER = $s1
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -16
-lw $s1, ($at)
-addi $at, $s1, -100
-bgt $at, $0, mainreturn
+move $s1, $s0
+addi $t0, $s1, -100
+bgt $t0, $0, mainreturn
 CONVERTING IR INSTRUCTION
 sub n n 1
 CONVERTING IMMEDIATE
@@ -948,11 +870,11 @@ ATTEMPTING TO PLACE VARIABLE n ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -16
-lw $s1, ($at)
+addi $t0, $sp, -16
+lw $s1, ($t0)
 addi $s0, $s1, -1
-addi $at, $sp, -16
-sw $s0, ($at)
+addi $t0, $sp, -16
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 assign i 0
 CONVERTING IMMEDIATE
@@ -971,8 +893,8 @@ ATTEMPTING TO PLACE VARIABLE i ONTO STACK
 
 CONVERTED TO MIPS INSTRUCTIONS
 addi $s0, $0, 0
-addi $at, $sp, -12
-sw $s0, ($at)
+addi $t0, $sp, -12
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 label loop0
 CONVERTING JUMP
@@ -999,12 +921,12 @@ LOADING VARIABLE n INTO A REGISTER
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -12
-lw $s1, ($at)
-addi $at, $sp, -16
-lw $s2, ($at)
-sub $at, $s1, $s2
-bgt $at, $0, mainexit0
+addi $t0, $sp, -12
+lw $s1, ($t0)
+addi $t0, $sp, -16
+lw $s2, ($t0)
+sub $t0, $s1, $s2
+bgt $t0, $0, mainexit0
 CONVERTING IR INSTRUCTION
 callr t geti
 CONVERTING IR FUNCTION CALL
@@ -1026,24 +948,19 @@ ATTEMPTING TO PLACE VARIABLE t ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -8
-lw $s0, ($at)
+addi $t0, $sp, -8
+lw $s0, ($t0)
 addi $v0, $0, 5
 syscall
 move $s0, $v0
-addi $at, $sp, -8
-sw $s0, ($at)
+addi $t0, $sp, -8
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 array_store t A i
 CONVERTING DATA OP
-LOADING VARIABLE t INTO A REGISTER
-
-
-
- LOADING VALUE INTO A REGISTER 
-
-
-
+VARIABLE t IS ALREADY STORED IN A REGISTER!
+PREV REGISTER = $s0
+NEW REGISTER = $s0
 LOADING VARIABLE A INTO A REGISTER
 
 
@@ -1069,32 +986,26 @@ ATTEMPTING TO PLACE VARIABLE t ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -8
-lw $s0, ($at)
-addi $at, $sp, -4
-lw $s1, ($at)
-addi $at, $sp, -12
-lw $s2, ($at)
-move $at, $s2
-sll $at, $at, 2
-add $at, $at, $s1
-sw $s0, ($at)
-addi $at, $sp, -8
-sw $s0, ($at)
+move $s0, $s0
+addi $t0, $sp, -4
+lw $s1, ($t0)
+addi $t0, $sp, -12
+lw $s2, ($t0)
+move $t0, $s2
+sll $t0, $t0, 2
+add $t0, $t0, $s1
+sw $s0, ($t0)
+addi $t0, $sp, -8
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 add i i 1
 CONVERTING IMMEDIATE
 operand 0 = i
 operand 1 = i
 OPERAND iIS A VARIABLE
-LOADING VARIABLE i INTO A REGISTER
-
-
-
- LOADING VALUE INTO A REGISTER 
-
-
-
+VARIABLE i IS ALREADY STORED IN A REGISTER!
+PREV REGISTER = $s2
+NEW REGISTER = $s1
 OPERAND 1 IS A NUMBER
 ATTEMPTING TO PLACE VARIABLE i ONTO STACK
 
@@ -1105,11 +1016,10 @@ ATTEMPTING TO PLACE VARIABLE i ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -12
-lw $s1, ($at)
+move $s1, $s2
 addi $s0, $s1, 1
-addi $at, $sp, -12
-sw $s0, ($at)
+addi $t0, $sp, -12
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 goto loop0
 CONVERTING JUMP
@@ -1145,12 +1055,12 @@ LOADING VARIABLE n INTO A REGISTER
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -4
-lw $s1, ($at)
+addi $t0, $sp, -4
+lw $s1, ($t0)
 move $a0, $s1
 addi $a1, $0, 0
-addi $at, $sp, -16
-lw $s1, ($at)
+addi $t0, $sp, -16
+lw $s1, ($t0)
 move $a2, $s1
 addi $sp, $sp, -20
 jal quicksort
@@ -1173,8 +1083,8 @@ ATTEMPTING TO PLACE VARIABLE i ONTO STACK
 
 CONVERTED TO MIPS INSTRUCTIONS
 addi $s0, $0, 0
-addi $at, $sp, -12
-sw $s0, ($at)
+addi $t0, $sp, -12
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 label loop1
 CONVERTING JUMP
@@ -1201,12 +1111,12 @@ LOADING VARIABLE n INTO A REGISTER
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -12
-lw $s1, ($at)
-addi $at, $sp, -16
-lw $s2, ($at)
-sub $at, $s1, $s2
-bgt $at, $0, mainexit1
+addi $t0, $sp, -12
+lw $s1, ($t0)
+addi $t0, $sp, -16
+lw $s2, ($t0)
+sub $t0, $s1, $s2
+bgt $t0, $0, mainexit1
 CONVERTING IR INSTRUCTION
 array_load t A i
 CONVERTING DATA OP
@@ -1243,33 +1153,27 @@ ATTEMPTING TO PLACE VARIABLE t ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -8
-lw $s0, ($at)
-addi $at, $sp, -4
-lw $s1, ($at)
-addi $at, $sp, -12
-lw $s2, ($at)
-move $at, $s2
-sll $at, $at, 2
-add $at, $at, $s1
-lw $s0, ($at)
-addi $at, $sp, -8
-sw $s0, ($at)
+addi $t0, $sp, -8
+lw $s0, ($t0)
+addi $t0, $sp, -4
+lw $s1, ($t0)
+addi $t0, $sp, -12
+lw $s2, ($t0)
+move $t0, $s2
+sll $t0, $t0, 2
+add $t0, $t0, $s1
+lw $s0, ($t0)
+addi $t0, $sp, -8
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 call puti t
 CONVERTING IR FUNCTION CALL
 CONVERTING AN IR FUNCTION CALL
-LOADING VARIABLE t INTO A REGISTER
-
-
-
- LOADING VALUE INTO A REGISTER 
-
-
-
+VARIABLE t IS ALREADY STORED IN A REGISTER!
+PREV REGISTER = $s0
+NEW REGISTER = $s1
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -8
-lw $s1, ($at)
+move $s1, $s0
 addi $v0, $0, 1
 move $a0, $s1
 syscall
@@ -1287,14 +1191,9 @@ CONVERTING IMMEDIATE
 operand 0 = i
 operand 1 = i
 OPERAND iIS A VARIABLE
-LOADING VARIABLE i INTO A REGISTER
-
-
-
- LOADING VALUE INTO A REGISTER 
-
-
-
+VARIABLE i IS ALREADY STORED IN A REGISTER!
+PREV REGISTER = $s2
+NEW REGISTER = $s1
 OPERAND 1 IS A NUMBER
 ATTEMPTING TO PLACE VARIABLE i ONTO STACK
 
@@ -1305,11 +1204,10 @@ ATTEMPTING TO PLACE VARIABLE i ONTO STACK
 
 
 CONVERTED TO MIPS INSTRUCTIONS
-addi $at, $sp, -12
-lw $s1, ($at)
+move $s1, $s2
 addi $s0, $s1, 1
-addi $at, $sp, -12
-sw $s0, ($at)
+addi $t0, $sp, -12
+sw $s0, ($t0)
 CONVERTING IR INSTRUCTION
 goto loop1
 CONVERTING JUMP
@@ -1330,299 +1228,282 @@ mainreturn: add $0, $0, $0
 CONVERTED INSTRUCTIONS
 PRINTING INSTRUCTIONS
 quicksort: add $0, $0, $0
-addi $at, $sp, 0
-sw $ra, ($at)
-addi $at, $sp, -4
-sw $a0, ($at)
-addi $at, $sp, -12
-sw $a1, ($at)
-addi $at, $sp, -8
-sw $a2, ($at)
+addi $t0, $sp, 0
+sw $ra, ($t0)
+addi $t0, $sp, -4
+sw $a0, ($t0)
+addi $t0, $sp, -12
+sw $a1, ($t0)
+addi $t0, $sp, -8
+sw $a2, ($t0)
 addi $s0, $0, 0
-addi $at, $sp, -40
-sw $s0, ($at)
+addi $t0, $sp, -40
+sw $s0, ($t0)
 addi $s0, $0, 0
-addi $at, $sp, -44
-sw $s0, ($at)
-addi $at, $sp, -12
-lw $s1, ($at)
-addi $at, $sp, -8
-lw $s2, ($at)
-sub $at, $s1, $s2
-bge $at, $0, quicksortend
-addi $at, $sp, -12
-lw $s1, ($at)
-addi $at, $sp, -8
-lw $s2, ($at)
+addi $t0, $sp, -44
+sw $s0, ($t0)
+addi $t0, $sp, -12
+lw $s1, ($t0)
+addi $t0, $sp, -8
+lw $s2, ($t0)
+sub $t0, $s1, $s2
+bge $t0, $0, quicksortend
+addi $t0, $sp, -12
+lw $s1, ($t0)
+addi $t0, $sp, -8
+lw $s2, ($t0)
 add $s0, $s1, $s2
-addi $at, $sp, -32
-sw $s0, ($at)
-addi $at, $sp, -32
-lw $s1, ($at)
+addi $t0, $sp, -32
+sw $s0, ($t0)
+addi $t0, $sp, -32
+lw $s1, ($t0)
 addi $s0, $0, 2
 div $s0, $s1, $s0
-addi $at, $sp, -32
-sw $s0, ($at)
-addi $at, $sp, -36
-lw $s0, ($at)
-addi $at, $sp, -4
-lw $s1, ($at)
-addi $at, $sp, -32
-lw $s2, ($at)
-move $at, $s2
-sll $at, $at, 2
-add $at, $at, $s1
-lw $s0, ($at)
-addi $at, $sp, -36
-sw $s0, ($at)
-addi $at, $sp, -12
-lw $s1, ($at)
+addi $t0, $sp, -32
+sw $s0, ($t0)
+addi $t0, $sp, -36
+lw $s0, ($t0)
+addi $t0, $sp, -4
+lw $s1, ($t0)
+move $s2, $s1
+move $t0, $s2
+sll $t0, $t0, 2
+add $t0, $t0, $s1
+lw $s0, ($t0)
+addi $t0, $sp, -36
+sw $s0, ($t0)
+move $s1, $s1
 addi $s0, $s1, -1
-addi $at, $sp, -40
-sw $s0, ($at)
-addi $at, $sp, -8
-lw $s1, ($at)
+addi $t0, $sp, -40
+sw $s0, ($t0)
+move $s1, $s2
 addi $s0, $s1, 1
-addi $at, $sp, -44
-sw $s0, ($at)
+addi $t0, $sp, -44
+sw $s0, ($t0)
 quicksortloop0: add $0, $0, $0
 quicksortloop1: add $0, $0, $0
-addi $at, $sp, -40
-lw $s1, ($at)
+addi $t0, $sp, -40
+lw $s1, ($t0)
 addi $s0, $s1, 1
-addi $at, $sp, -40
-sw $s0, ($at)
-addi $at, $sp, -28
-lw $s0, ($at)
-addi $at, $sp, -4
-lw $s1, ($at)
-addi $at, $sp, -40
-lw $s2, ($at)
-move $at, $s2
-sll $at, $at, 2
-add $at, $at, $s1
-lw $s0, ($at)
-addi $at, $sp, -28
-sw $s0, ($at)
-addi $at, $sp, -28
-lw $s1, ($at)
+addi $t0, $sp, -40
+sw $s0, ($t0)
+addi $t0, $sp, -28
+lw $s0, ($t0)
+addi $t0, $sp, -4
+lw $s1, ($t0)
+move $s2, $s1
+move $t0, $s2
+sll $t0, $t0, 2
+add $t0, $t0, $s1
+lw $s0, ($t0)
+addi $t0, $sp, -28
+sw $s0, ($t0)
+move $s1, $s0
 move $s0, $s1
-addi $at, $sp, -16
-sw $s0, ($at)
-addi $at, $sp, -16
-lw $s1, ($at)
-addi $at, $sp, -36
-lw $s2, ($at)
-sub $at, $s1, $s2
-blt $at, $0, quicksortloop1
+addi $t0, $sp, -16
+sw $s0, ($t0)
+addi $t0, $sp, -16
+lw $s1, ($t0)
+addi $t0, $sp, -36
+lw $s2, ($t0)
+sub $t0, $s1, $s2
+blt $t0, $0, quicksortloop1
 quicksortloop2: add $0, $0, $0
-addi $at, $sp, -44
-lw $s1, ($at)
+addi $t0, $sp, -44
+lw $s1, ($t0)
 addi $s0, $s1, -1
-addi $at, $sp, -44
-sw $s0, ($at)
-addi $at, $sp, -28
-lw $s0, ($at)
-addi $at, $sp, -4
-lw $s1, ($at)
-addi $at, $sp, -44
-lw $s2, ($at)
-move $at, $s2
-sll $at, $at, 2
-add $at, $at, $s1
-lw $s0, ($at)
-addi $at, $sp, -28
-sw $s0, ($at)
-addi $at, $sp, -28
-lw $s1, ($at)
+addi $t0, $sp, -44
+sw $s0, ($t0)
+addi $t0, $sp, -28
+lw $s0, ($t0)
+addi $t0, $sp, -4
+lw $s1, ($t0)
+move $s2, $s1
+move $t0, $s2
+sll $t0, $t0, 2
+add $t0, $t0, $s1
+lw $s0, ($t0)
+addi $t0, $sp, -28
+sw $s0, ($t0)
+move $s1, $s0
 move $s0, $s1
-addi $at, $sp, -20
-sw $s0, ($at)
-addi $at, $sp, -20
-lw $s1, ($at)
-addi $at, $sp, -36
-lw $s2, ($at)
-sub $at, $s1, $s2
-bgt $at, $0, quicksortloop2
-addi $at, $sp, -40
-lw $s1, ($at)
-addi $at, $sp, -44
-lw $s2, ($at)
-sub $at, $s1, $s2
-bge $at, $0, quicksortexit0
-addi $at, $sp, -16
-lw $s0, ($at)
-addi $at, $sp, -4
-lw $s1, ($at)
-addi $at, $sp, -44
-lw $s2, ($at)
-move $at, $s2
-sll $at, $at, 2
-add $at, $at, $s1
-sw $s0, ($at)
-addi $at, $sp, -16
-sw $s0, ($at)
-addi $at, $sp, -20
-lw $s0, ($at)
-addi $at, $sp, -4
-lw $s1, ($at)
-addi $at, $sp, -40
-lw $s2, ($at)
-move $at, $s2
-sll $at, $at, 2
-add $at, $at, $s1
-sw $s0, ($at)
-addi $at, $sp, -20
-sw $s0, ($at)
+addi $t0, $sp, -20
+sw $s0, ($t0)
+addi $t0, $sp, -20
+lw $s1, ($t0)
+addi $t0, $sp, -36
+lw $s2, ($t0)
+sub $t0, $s1, $s2
+bgt $t0, $0, quicksortloop2
+addi $t0, $sp, -40
+lw $s1, ($t0)
+addi $t0, $sp, -44
+lw $s2, ($t0)
+sub $t0, $s1, $s2
+bge $t0, $0, quicksortexit0
+addi $t0, $sp, -16
+lw $s0, ($t0)
+addi $t0, $sp, -4
+lw $s1, ($t0)
+addi $t0, $sp, -44
+lw $s2, ($t0)
+move $t0, $s2
+sll $t0, $t0, 2
+add $t0, $t0, $s1
+sw $s0, ($t0)
+addi $t0, $sp, -16
+sw $s0, ($t0)
+addi $t0, $sp, -20
+lw $s0, ($t0)
+move $s1, $s1
+addi $t0, $sp, -40
+lw $s2, ($t0)
+move $t0, $s2
+sll $t0, $t0, 2
+add $t0, $t0, $s1
+sw $s0, ($t0)
+addi $t0, $sp, -20
+sw $s0, ($t0)
 j quicksortloop0
 quicksortexit0: add $0, $0, $0
-addi $at, $sp, -44
-lw $s1, ($at)
+addi $t0, $sp, -44
+lw $s1, ($t0)
 addi $s0, $s1, 1
-addi $at, $sp, -24
-sw $s0, ($at)
-addi $at, $sp, -4
-lw $s1, ($at)
+addi $t0, $sp, -24
+sw $s0, ($t0)
+addi $t0, $sp, -4
+lw $s1, ($t0)
 move $a0, $s1
-addi $at, $sp, -12
-lw $s1, ($at)
+addi $t0, $sp, -12
+lw $s1, ($t0)
 move $a1, $s1
-addi $at, $sp, -44
-lw $s1, ($at)
+move $s1, $s1
 move $a2, $s1
 addi $sp, $sp, -48
 jal quicksort
 addi $sp, $sp, 48
-addi $at, $sp, -44
-lw $s1, ($at)
+move $s1, $s1
 addi $s0, $s1, 1
-addi $at, $sp, -44
-sw $s0, ($at)
-addi $at, $sp, -4
-lw $s1, ($at)
+addi $t0, $sp, -44
+sw $s0, ($t0)
+move $s1, $s1
 move $a0, $s1
-addi $at, $sp, -44
-lw $s1, ($at)
+move $s1, $s1
 move $a1, $s1
-addi $at, $sp, -8
-lw $s1, ($at)
+addi $t0, $sp, -8
+lw $s1, ($t0)
 move $a2, $s1
 addi $sp, $sp, -48
 jal quicksort
 addi $sp, $sp, 48
 quicksortend: add $0, $0, $0
-addi $at, $sp, 0
-lw $ra, ($at)
+addi $t0, $sp, 0
+lw $ra, ($t0)
 jr $ra
 main: add $0, $0, $0
-addi $at, $sp, 0
-sw $ra, ($at)
+addi $t0, $sp, 0
+sw $ra, ($t0)
 addi $v0, $0, 9
 addi $a0, $0, 400
 syscall
 move $s1, $v0
-addi $at, $sp, -4
-sw $s1, ($at)
+addi $t0, $sp, -4
+sw $s1, ($t0)
 addi $s0, $0, 0
-addi $at, $sp, -8
-sw $s0, ($at)
-addi $at, $sp, -16
-lw $s0, ($at)
+addi $t0, $sp, -8
+sw $s0, ($t0)
+addi $t0, $sp, -16
+lw $s0, ($t0)
 addi $v0, $0, 5
 syscall
 move $s0, $v0
-addi $at, $sp, -16
-sw $s0, ($at)
-addi $at, $sp, -16
-lw $s1, ($at)
-addi $at, $s1, -100
-bgt $at, $0, mainreturn
-addi $at, $sp, -16
-lw $s1, ($at)
+addi $t0, $sp, -16
+sw $s0, ($t0)
+move $s1, $s0
+addi $t0, $s1, -100
+bgt $t0, $0, mainreturn
+addi $t0, $sp, -16
+lw $s1, ($t0)
 addi $s0, $s1, -1
-addi $at, $sp, -16
-sw $s0, ($at)
+addi $t0, $sp, -16
+sw $s0, ($t0)
 addi $s0, $0, 0
-addi $at, $sp, -12
-sw $s0, ($at)
+addi $t0, $sp, -12
+sw $s0, ($t0)
 mainloop0: add $0, $0, $0
-addi $at, $sp, -12
-lw $s1, ($at)
-addi $at, $sp, -16
-lw $s2, ($at)
-sub $at, $s1, $s2
-bgt $at, $0, mainexit0
-addi $at, $sp, -8
-lw $s0, ($at)
+addi $t0, $sp, -12
+lw $s1, ($t0)
+addi $t0, $sp, -16
+lw $s2, ($t0)
+sub $t0, $s1, $s2
+bgt $t0, $0, mainexit0
+addi $t0, $sp, -8
+lw $s0, ($t0)
 addi $v0, $0, 5
 syscall
 move $s0, $v0
-addi $at, $sp, -8
-sw $s0, ($at)
-addi $at, $sp, -8
-lw $s0, ($at)
-addi $at, $sp, -4
-lw $s1, ($at)
-addi $at, $sp, -12
-lw $s2, ($at)
-move $at, $s2
-sll $at, $at, 2
-add $at, $at, $s1
-sw $s0, ($at)
-addi $at, $sp, -8
-sw $s0, ($at)
-addi $at, $sp, -12
-lw $s1, ($at)
+addi $t0, $sp, -8
+sw $s0, ($t0)
+move $s0, $s0
+addi $t0, $sp, -4
+lw $s1, ($t0)
+addi $t0, $sp, -12
+lw $s2, ($t0)
+move $t0, $s2
+sll $t0, $t0, 2
+add $t0, $t0, $s1
+sw $s0, ($t0)
+addi $t0, $sp, -8
+sw $s0, ($t0)
+move $s1, $s2
 addi $s0, $s1, 1
-addi $at, $sp, -12
-sw $s0, ($at)
+addi $t0, $sp, -12
+sw $s0, ($t0)
 j mainloop0
 mainexit0: add $0, $0, $0
-addi $at, $sp, -4
-lw $s1, ($at)
+addi $t0, $sp, -4
+lw $s1, ($t0)
 move $a0, $s1
 addi $a1, $0, 0
-addi $at, $sp, -16
-lw $s1, ($at)
+addi $t0, $sp, -16
+lw $s1, ($t0)
 move $a2, $s1
 addi $sp, $sp, -20
 jal quicksort
 addi $sp, $sp, 20
 addi $s0, $0, 0
-addi $at, $sp, -12
-sw $s0, ($at)
+addi $t0, $sp, -12
+sw $s0, ($t0)
 mainloop1: add $0, $0, $0
-addi $at, $sp, -12
-lw $s1, ($at)
-addi $at, $sp, -16
-lw $s2, ($at)
-sub $at, $s1, $s2
-bgt $at, $0, mainexit1
-addi $at, $sp, -8
-lw $s0, ($at)
-addi $at, $sp, -4
-lw $s1, ($at)
-addi $at, $sp, -12
-lw $s2, ($at)
-move $at, $s2
-sll $at, $at, 2
-add $at, $at, $s1
-lw $s0, ($at)
-addi $at, $sp, -8
-sw $s0, ($at)
-addi $at, $sp, -8
-lw $s1, ($at)
+addi $t0, $sp, -12
+lw $s1, ($t0)
+addi $t0, $sp, -16
+lw $s2, ($t0)
+sub $t0, $s1, $s2
+bgt $t0, $0, mainexit1
+addi $t0, $sp, -8
+lw $s0, ($t0)
+addi $t0, $sp, -4
+lw $s1, ($t0)
+addi $t0, $sp, -12
+lw $s2, ($t0)
+move $t0, $s2
+sll $t0, $t0, 2
+add $t0, $t0, $s1
+lw $s0, ($t0)
+addi $t0, $sp, -8
+sw $s0, ($t0)
+move $s1, $s0
 addi $v0, $0, 1
 move $a0, $s1
 syscall
 addi $v0, $0, 11
 addi $a0, $0, 10
 syscall
-addi $at, $sp, -12
-lw $s1, ($at)
+move $s1, $s2
 addi $s0, $s1, 1
-addi $at, $sp, -12
-sw $s0, ($at)
+addi $t0, $sp, -12
+sw $s0, ($t0)
 j mainloop1
 mainexit1: add $0, $0, $0
 mainreturn: add $0, $0, $0

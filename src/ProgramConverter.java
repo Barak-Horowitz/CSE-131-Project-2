@@ -12,16 +12,18 @@ public class ProgramConverter {
     private HashMap<Integer, MIPSInstruction> instructionSet;
     private LinkedList<MIPSInstruction> instructions;
     private Map<String, Integer> labels;
+    private boolean naive;
 
 
     private final int PCCounterSize = 4;
 
 
-    public ProgramConverter(IRProgram IRProg) {
+    public ProgramConverter(IRProgram IRProg, boolean naive) {
         this.IRProg = IRProg;
         instructionSet = new HashMap<>();
         instructions = new LinkedList<>();
         labels = new HashMap<>();
+        this.naive = naive;
     }
 
     public LinkedList<MIPSInstruction> convertIRProg() {
@@ -44,8 +46,15 @@ public class ProgramConverter {
         // need to do live analysis 
     }
 
+
     private void convertInstructions() {
-        InstructionConverter instructionConverter = new InstructionConverter();
+        InstructionConverter instructionConverter;
+        if(naive) {
+            instructionConverter = new InstructionConverter();
+        } else {
+            List<IRInstruction> headers = findHeaders();
+            instructionConverter = new EnhancedInstructionConverter(headers);
+        }
         int currIndex = 0;
 
         // add all functions
@@ -90,10 +99,8 @@ public class ProgramConverter {
             instructions.addAll(instructionConverter.addExit(function));
         }
     }
+
     
-    private void convertRegisters() {
-        return;
-    }
 
     private void printInstructions() {
         for(MIPSInstruction instruction : instructions) {
@@ -107,5 +114,46 @@ public class ProgramConverter {
             System.out.print(" " + instruction.operands[i].toString());
         }
         System.out.println();
+    }
+
+    private List<IRInstruction> findHeaders() {
+        List<IRInstruction> headers = new LinkedList<>();
+        for(IRFunction function : IRProg.functions) {
+            boolean firstInstruction = true;
+            boolean prevBranch = false;
+            for(IRInstruction instruction : function.instructions) {
+                if(firstInstruction || prevBranch || isTarget(instruction)) {
+                    headers.add(instruction);
+                }
+                firstInstruction = false;
+                prevBranch = isBranch(instruction);
+            }
+        }
+        return headers;
+
+    }
+
+
+    private boolean isTarget(IRInstruction instruction) {
+        switch(instruction.opCode) {
+            case LABEL:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private boolean isBranch(IRInstruction instruction) {
+        switch(instruction.opCode) {
+            case BREQ:
+            case BRNEQ:
+            case BRLT:
+            case BRGT:
+            case BRLEQ:
+            case BRGEQ:
+                return true;
+            default:
+                return false;
+        }
     }
 }

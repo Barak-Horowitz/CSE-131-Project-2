@@ -9,7 +9,7 @@ import main.java.mips.operand.*;
 
 public class InstructionCreator {
     private final Register zeroReg = new Register("$0");
-    private final Register tempReg = new Register("$at"); // USE ARGUMENTS REGISTER AS TEMPORARY FOR MULTS/DIVS
+    private final Register tempReg = new Register("$t0"); // USE ARGUMENTS REGISTER AS TEMPORARY FOR MULTS/DIVS
     private final Register returnReg = new Register("$v0");
     private final Register argsReg = new Register("$a0");
     private final Register jumpReturnReg = new Register("$ra");

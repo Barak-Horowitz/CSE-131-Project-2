@@ -7,12 +7,15 @@ import main.java.mips.*;
 import main.java.mips.operand.*;
 public class MipsCompiler {
     public static void main(String[] args) throws Exception {
+        boolean naive;
         if(args[1].equals("--naive")) {
-            boolean naive = true;
+            naive = true;
         } else if (args[1].equals("--greedy")){
-            boolean naive = false;
+            naive = false;
         } else {
             System.out.println("ERROR MUST PASS IN EITHER --naive OR --greedy AS FLAG");
+            naive = false;
+            System.exit(-1);
         }
 
         // file reader reads a text file containing text code and generates datastructure for the program
@@ -23,10 +26,11 @@ public class MipsCompiler {
 
         // initialize the converter to convert IR PROG to MIPS PROG
         System.out.println("CONVERTING IR PROGRAM TO MIPS");
-        ProgramConverter IRToMips = new ProgramConverter(program);
+        ProgramConverter IRToMips = new ProgramConverter(program, naive);
         // grab the converted MIPS PROG
-        LinkedList<MIPSInstruction> convertedProg = IRToMips.convertIRProg();
-
+        // use the naive converter if naive option is set
+        LinkedList<MIPSInstruction> convertedProg;
+        convertedProg = IRToMips.convertIRProg();
         // write the mips prog out to a file
         String fileName = "out.s";
         try {

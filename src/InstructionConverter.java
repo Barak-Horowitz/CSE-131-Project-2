@@ -8,27 +8,27 @@ import main.java.mips.*;
 import main.java.mips.operand.*;
 
 public class InstructionConverter {
-    private InstructionCreator mipsCreator;
+    protected InstructionCreator mipsCreator;
     // ALLOCATED REGISTERS
-    private final String argsReg = "$a";
-    private final Register zeroReg = new Register("$0");
-    private final Register returnReg = new Register ("$v0");
-    private final Register stackPointer = new Register("$sp");
-    private final Register operandOneRegister = new Register("$s1");
-    private final Register operandTwoRegister = new Register("$s2");
-    private final Register destinationRegister = new Register("$s0");
-    private final Register returnAddressRegister = new Register("$ra");
+    protected final String argsReg = "$a";
+    protected final Register zeroReg = new Register("$0");
+    protected final Register returnReg = new Register ("$v0");
+    protected final Register stackPointer = new Register("$sp");
+    protected final Register operandOneRegister = new Register("$s1");
+    protected final Register operandTwoRegister = new Register("$s2");
+    protected final Register destinationRegister = new Register("$s0");
+    protected final Register returnAddressRegister = new Register("$ra");
 
     // FUNCTION NAME DATA STRUCTURES
-    private String functionName; // stores name of our current function
-    private HashSet<String> functions; // stores name of all functions
+    protected String functionName; // stores name of our current function
+    protected HashSet<String> functions; // stores name of all functions
     
     // STACK DATA STRUCTURES
-    private HashMap<String, Integer> variableStackOffset; // stores all variables offset from stack within a function
+    protected HashMap<String, Integer> variableStackOffset; // stores all variables offset from stack within a function
 
     
-    private int maxStackOffset; // stores the maximum stack offset of our current stack frame
-    private String globalLabel; // stores the label of the current instruction
+    protected int maxStackOffset; // stores the maximum stack offset of our current stack frame
+    protected String globalLabel; // stores the label of the current instruction
 
     public InstructionConverter() {
         mipsCreator = new InstructionCreator();
@@ -61,30 +61,30 @@ public class InstructionConverter {
 
     }
 
-    private void printStackContents(IRFunction function) {
+    protected void printStackContents(IRFunction function) {
         System.out.println("STACK CONTENTS AFTER ENTERING FUNCTION " + function.name);
         printStackContents();
     }
 
-    private void printStackContents() {
+    protected void printStackContents() {
         for(Map.Entry<String, Integer> entry: variableStackOffset.entrySet()) {
             System.out.println("VARIABLE " + entry.getKey() + " STORED AT OFFSET " + entry.getValue());
         }
     }
 
-    public List<MIPSInstruction> createLabel(IRFunction function) {
+    protected List<MIPSInstruction> createLabel(IRFunction function) {
         List<MIPSInstruction> returnList = new LinkedList<>();
         returnList.addAll(mipsCreator.createLabel(function.name));
         return returnList;
     }
 
-    private List<MIPSInstruction> saveReturnAddress() {
+    protected List<MIPSInstruction> saveReturnAddress() {
         Imm saveOffset = new Imm("0", "DEC");
         return mipsCreator.createStoreFromRegister(returnAddressRegister, stackPointer, saveOffset, getLabel());
 
     }
 
-    private List<MIPSInstruction> restoreReturnAddress() {
+    protected List<MIPSInstruction> restoreReturnAddress() {
         Imm saveOffset = new Imm("0", "DEC");
         return mipsCreator.createLoadToRegister(returnAddressRegister, stackPointer, saveOffset, getLabel());
     }
@@ -164,7 +164,7 @@ public class InstructionConverter {
 
 
     // TODO: WRITE METHOD TO CONVERT INTRINSIC IR FUNCTION CALLS
-    private List<MIPSInstruction> convertIRFunctionCall(IRInstruction instruction) {
+    protected List<MIPSInstruction> convertIRFunctionCall(IRInstruction instruction) {
         System.out.println("CONVERTING AN IR FUNCTION CALL");
         List<MIPSInstruction> returnList = new LinkedList<>();
         switch(instruction.opCode) {
@@ -217,7 +217,7 @@ public class InstructionConverter {
         return returnList;
     }
 
-    private List<MIPSInstruction> convertDataType(IRInstruction instruction) {
+    protected List<MIPSInstruction> convertDataType(IRInstruction instruction) {
         List<MIPSInstruction> returnList = new LinkedList<MIPSInstruction>();
         returnList.addAll(variableToRegister(instruction.operands[0], destinationRegister));
         Register arrayStoreReg = destinationRegister;
@@ -265,7 +265,7 @@ public class InstructionConverter {
         
     }
 
-    private List<MIPSInstruction> convertJType(IRInstruction instruction) {
+    protected List<MIPSInstruction> convertJType(IRInstruction instruction) {
         List<MIPSInstruction> returnList = new LinkedList<>();
         switch(instruction.opCode) {
             case GOTO: {
@@ -362,7 +362,7 @@ public class InstructionConverter {
         }
     }
     
-    private List<MIPSInstruction> convertConditionalBranch(IRInstruction instruction) {
+    protected List<MIPSInstruction> convertConditionalBranch(IRInstruction instruction) {
         List<MIPSInstruction> returnList = new LinkedList<MIPSInstruction>();
         String label = makeLabel(instruction.operands[0].toString());
         Addr labelAddress = new Addr(label);
@@ -462,7 +462,7 @@ public class InstructionConverter {
     }
             
             
-    private List<MIPSInstruction> convertRType(IRInstruction instruction) {
+    protected List<MIPSInstruction> convertRType(IRInstruction instruction) {
         List<MIPSInstruction> returnList = new LinkedList<MIPSInstruction>();
         // load in operand variables into registers
         returnList.addAll(variableToRegister(instruction.operands[1], operandOneRegister));
@@ -505,7 +505,7 @@ public class InstructionConverter {
         return returnList;
     }
 
-    private List<MIPSInstruction> convertIType(IRInstruction instruction) {
+    protected List<MIPSInstruction> convertIType(IRInstruction instruction) {
         List<MIPSInstruction> returnList = new LinkedList<>();
         Imm valOne = null;
         Imm valTwo = null;
@@ -614,7 +614,7 @@ public class InstructionConverter {
         return returnList;
     }
 
-    private boolean jType (IRInstruction instruction) {
+    protected boolean jType (IRInstruction instruction) {
         
         switch(instruction.opCode) {
             case LABEL: 
@@ -635,7 +635,7 @@ public class InstructionConverter {
 
     }
 
-    private boolean IRFunctionCall(IRInstruction instruction) {
+    protected boolean IRFunctionCall(IRInstruction instruction) {
         switch(instruction.opCode) {
             case CALL: {
                 switch(instruction.operands[0].toString()) {
@@ -666,7 +666,7 @@ public class InstructionConverter {
     }
 
     
-    private boolean dataOperation (IRInstruction instruction) {
+    protected boolean dataOperation (IRInstruction instruction) {
         switch(instruction.opCode) {
             case ARRAY_LOAD:
             case ARRAY_STORE:
@@ -680,7 +680,7 @@ public class InstructionConverter {
     }
 
     // if instruction has any numbers in its operands instead of variables it is an i-type instruction
-    private boolean iType (IRInstruction instruction) {
+    protected boolean iType (IRInstruction instruction) {
         
         for(int i = 0; i < instruction.operands.length; i++) {
             if(instruction.operands[i] instanceof IRConstantOperand) {
@@ -696,7 +696,7 @@ public class InstructionConverter {
 
 
     // given a variable and a register to write it to, write the variable to the register
-    private List<MIPSInstruction> variableToRegister(IROperand operand, Register storeReg) {
+    protected List<MIPSInstruction> variableToRegister(IROperand operand, Register storeReg) {
         List<MIPSInstruction> returnList = new LinkedList<>();
         System.out.println("LOADING VARIABLE " + operand.toString() + " INTO A REGISTER");
         // load the value in from the stack and place it in the specified register 
@@ -709,7 +709,7 @@ public class InstructionConverter {
     }
 
     // given a variable and the register which holds the variable write the variable to the correct location on the stack
-    private List<MIPSInstruction> registerToStack(IROperand operand, Register storeReg) {
+    protected List<MIPSInstruction> registerToStack(IROperand operand, Register storeReg) {
         List<MIPSInstruction> returnList = new LinkedList<>();
         System.out.println("ATTEMPTING TO PLACE VARIABLE " + operand.toString() + " ONTO STACK");
         // grab stack offset of variable
@@ -721,7 +721,7 @@ public class InstructionConverter {
     }
 
     // given a variable returns the offset at which the variable is stored on the stack
-    private int findOffset(IROperand operand) {
+    protected int findOffset(IROperand operand) {
         if(!variableStackOffset.containsKey(operand.toString())) {
             System.out.println("ATTEMPTED TO FIND OFFSET OF VARIABLE " + operand.toString() + " SO THAT WE COULD LOAD IT INTO A REG BUT NONE WAS FOUND");
             try {
@@ -734,20 +734,20 @@ public class InstructionConverter {
         return(variableStackOffset.get(operand.toString()));
     }
 
-    private List<MIPSInstruction> loadValueToReg(Register freeReg, int offset) {
+    protected List<MIPSInstruction> loadValueToReg(Register freeReg, int offset) {
         System.out.println("\n\n\n LOADING VALUE INTO A REGISTER \n\n\n");
         Imm offsetImm = new Imm("" + offset, "DEC");
         return mipsCreator.createLoadToRegister(freeReg, stackPointer, offsetImm, getLabel());
     }
 
-    private List<MIPSInstruction> loadValueToStack(Register dataReg, int offset) {
+    protected List<MIPSInstruction> loadValueToStack(Register dataReg, int offset) {
         System.out.println("\n\n\n LOADING VALUE INTO STACK \n\n\n");
         Imm offsetImm = new Imm("" + offset, "DEC");
         return mipsCreator.createStoreFromRegister(dataReg, stackPointer, offsetImm, getLabel());
     }
 
 
-    private void convertVariableToStackOffset(IROperand operand) {
+    protected void convertVariableToStackOffset(IROperand operand) {
         // if variable is already assigned a stack offset return immediatly
         if(variableStackOffset.containsKey(operand.toString())) {
             return;
@@ -758,22 +758,22 @@ public class InstructionConverter {
         return;
     }
 
-    private Imm createImmediate(IROperand operand) {
+    protected Imm createImmediate(IROperand operand) {
         Imm immVal = new Imm("" + Integer.parseInt(operand.toString()), "DEC");
         return immVal;
     }
 
-    private String getLabel() {
+    protected String getLabel() {
         String returnString = globalLabel;
         globalLabel = "";
         return returnString;
     }
 
-    public void addFunction(IRFunction function) {
+    protected void addFunction(IRFunction function) {
         functions.add(function.name);
     }
 
-    private String makeLabel(String labelName) {
+    protected String makeLabel(String labelName) {
         if(functions.contains(labelName)) {
             return labelName;
         }
